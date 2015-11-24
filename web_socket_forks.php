@@ -9,7 +9,8 @@ class WebSocketServer {
           $pathParams = [':entity', ':context', ':token'],
           $config = [],
           $handshakes = [],
-          $userId;
+          $userId,
+          $totalClients = 0;
 
   const MAX_BYTES_READ = 8192,
           HEADER_BYTES_READ = 1024;
@@ -18,7 +19,11 @@ class WebSocketServer {
   const STREAM_SELECT_TIMEOUT = 3600;
   // stream non-blocking 
   const NON_BLOCK = 0;
-
+  // max clients to fork another process
+  const MAX_CLIENTS_REMAINDER_FORK = 2;
+  // title to use in ps, htop etc
+  const PROC_TITLE = 'php-wss';
+  
   public function __construct($config) {
     ini_set('default_socket_timeout', 5); // this should be >= 5 sec, otherwise there will be broken pipe - tested
     $this->config = $config;
@@ -31,114 +36,81 @@ class WebSocketServer {
     if ($server === false) {
       die("Could not bind to socket: $errno - $errorMessage");
     }
+    
+    $this->eventLoop($server);
+  }
 
-    while (true) {
-      //prepare readable sockets
-      $readSocks = $this->clients;
-      $readSocks[] = $server;
+  private function eventLoop($server, $fork = false) {
+    if ($fork === true) {
+      $pid = pcntl_fork();
+      
+      if ($pid) { // run eventLoop in parent
+        cli_set_process_title(self::PROC_TITLE);
+        $this->eventLoop($server);
+      }      
+    } else {
+      while (true) {
+        $this->totalClients = count($this->clients);
+        
+        if ($this->totalClients !== 0 && $this->totalClients % self::MAX_CLIENTS_REMAINDER_FORK === 0) {
+          $this->eventLoop($server, true);
+        }
+        
+        //prepare readable sockets
+        $readSocks = $this->clients;
+        $readSocks[] = $server;
 
-      //start reading and use a large timeout
-      if (!stream_select($readSocks, $write, $except, self::STREAM_SELECT_TIMEOUT)) {
-        die('something went wrong while selecting');
-      }
+        //start reading and use a large timeout
+        if (!stream_select($readSocks, $write, $except, self::STREAM_SELECT_TIMEOUT)) {
+          die('something went wrong while selecting');
+        }
 
-      print_r($readSocks);
+        print_r($readSocks);
 //      print_r($write);
-      //new client
-      if (in_array($server, $readSocks)) {
-        $newClient = stream_socket_accept($server, 0); // must be 0 to non-block
+        //new client
+        if (in_array($server, $readSocks)) {
+          $newClient = stream_socket_accept($server, 0); // must be 0 to non-block
 
-        if ($newClient) {
-          // print remote client information, ip and port number
-          $socketName = stream_socket_get_name($newClient, true);
+          if ($newClient) {
+            // print remote client information, ip and port number
+            $socketName = stream_socket_get_name($newClient, true);
 
-          // important to read from headers here coz later client will change and there will be only msgs on pipe
-          $headers = fread($newClient, self::HEADER_BYTES_READ);
-          $this->getPathParams($headers);
+            // important to read from headers here coz later client will change and there will be only msgs on pipe
+            $headers = fread($newClient, self::HEADER_BYTES_READ);
+            $this->getPathParams($headers);
 
-          $this->userId = self::getUserId($this->pathParams[':token']);
-          $this->clients[$this->userId] = $newClient; // add client with his id from token and save his $sock source and then search them by $sock          
-          $totalClients = count($this->clients);
+            $this->userId = self::getUserId($this->pathParams[':token']);
+            $this->clients[$this->userId] = $newClient; // add client with his id from token and save his $sock source and then search them by $sock                   
+            // trigger OPEN event 
+            $this->onOpen($newClient, ['total' => $this->totalClients,
+                'socket_name' => $socketName], $this->pathParams);
 
-          // trigger OPEN event 
-          $this->onOpen($newClient, ['total' => $totalClients,
-              'socket_name' => $socketName], $this->pathParams);
-
-          // handshake - then client source will be switched and counter incremented by 1 with reconect
-          $this->handshake($newClient, $headers);
+            // handshake - then client source will be switched and counter incremented by 1 with reconect
+            $this->handshake($newClient, $headers);
+          }
+          //delete the server socket from the read sockets
+          unset($readSocks[array_search($server, $readSocks)]);
         }
-        //delete the server socket from the read sockets
-        unset($readSocks[array_search($server, $readSocks)]);
-      }
 
-      //message from existing client
-      foreach ($readSocks as $sock) {
+        //message from existing client
+        foreach ($readSocks as $sock) {
 
-        $data = $this->decode(fread($sock, self::MAX_BYTES_READ));
+          $data = $this->decode(fread($sock, self::MAX_BYTES_READ));
 //        print_r($data);
-        if (!$data) {
-          // trigger CLOSE event
-          $this->onClose($sock);
-          unset($this->clients[array_search($sock, $this->clients)]);
-          @fclose($sock);
-          echo "A client disconnected. Now there are total " . count($this->clients) . " clients.".PHP_EOL;
-          continue;
+          if (!$data) {
+            // trigger CLOSE event
+            $this->onClose($sock);
+            unset($this->clients[array_search($sock, $this->clients)]);
+            @fclose($sock);
+            echo "A client disconnected. Now there are total " . count($this->clients) . " clients." . PHP_EOL;
+            continue;
+          }
+
+          // trigger MESSAGE event
+          $this->onMessage($sock, $data);
         }
-
-        // trigger MESSAGE event
-        $this->onMessage($sock, $data);
-
-//        if (!$this->handshake($sock)) {
-//          unset($this->clients[intval($sock)]);
-//          unset($this->handshakes[intval($sock)]);
-//          $address = explode(':', stream_socket_get_name($sock, true));
-//          if (isset($this->ips[$address[0]]) && $this->ips[$address[0]] > 0) {
-//            @$this->ips[$address[0]] --;
-//          }
-//          @fclose($sock);
-//        }
-
-        /* if ($write) {
-          echo 'write me....' . PHP_EOL;
-          foreach ($write as $sock) {
-          if (!$this->handshakes[intval($sock)]) {//если ещё не было получено рукопожатие от клиента
-          continue; //то отвечать ему рукопожатием ещё рано
-          }
-          $info = $this->handshake($sock);
-          //          echo $info;
-          $this->onOpen($sock, $info); //вызываем пользовательский сценарий
-          }
-          } */
-
-
-//        echo $this->handshake($sock);
-//        fwrite($sock, 'Handshaked with client: ' . $client_socks[array_search($sock, $client_socks)]);
-        //send the message back to client
-//        fwrite($sock, $this->encode($data['payload'])); 
       }
     }
-
-    /* while (true) {
-      stream_select($read, $write, $except, null);
-
-      if ($read) { // there is data from the client
-      foreach ($read as $client) {
-      print_r($client);die;
-      $data = fread($client, self::MAX_BYTES_READ);
-
-      if (!$data) { // connection was closed
-      unset($this->clients[intval($client)]);
-      @fclose($client);
-      continue;
-      }
-
-      fwrite($worker, $data);
-      }
-      }
-      } */
-
-//    $m = new Memcached();
-//    $m->addServer('localhost', 11211);
   }
 
   protected function encode($payload, $type = 'text', $masked = false) {
@@ -391,8 +363,7 @@ class WebSocketServer {
 
     fwrite($clientSock, $this->encode(json_encode($answer, JSON_NUMERIC_CHECK | JSON_PRETTY_PRINT)));
   }
-  
-  
+
   private function onClose($clientSock) {
     
   }
