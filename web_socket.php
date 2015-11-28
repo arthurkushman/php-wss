@@ -18,8 +18,6 @@ class WebSocketServer {
   const STREAM_SELECT_TIMEOUT = 3600;
   // stream non-blocking 
   const NON_BLOCK = 0;
-  // title to use in ps, htop etc
-  const PROC_TITLE = 'php-wss';  
   
   public function __construct($config) {
     ini_set('default_socket_timeout', 5); // this should be >= 5 sec, otherwise there will be broken pipe - tested
@@ -33,8 +31,6 @@ class WebSocketServer {
     if ($server === false) {
       die("Could not bind to socket: $errno - $errorMessage");
     }
-
-    cli_set_process_title(self::PROC_TITLE);
     
     while (true) {
       //prepare readable sockets

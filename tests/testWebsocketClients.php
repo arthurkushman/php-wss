@@ -11,10 +11,10 @@ class TestWebSocketClients extends PHPUnit_Framework_TestCase {
 
   public function testHundredClients() {
 
-    for ($i = 0; $i < 5;  ++$i) {
-      $WebSocketClient[$i] = new WebsocketClient('127.0.0.1', 8000);
-      echo $WebSocketClient[$i]->sendData('Client connected ' . $i);
-    }
+//    for ($i = 0; $i < 5;  ++$i) {
+      $WebSocketClient = new WebsocketClient('127.0.0.1', 8000);
+      echo $WebSocketClient->sendData('Client connected ');
+//    }
 //    sleep(10);
 //    unset($WebSocketClient);
   }
