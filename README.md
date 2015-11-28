@@ -1,6 +1,6 @@
 # README #
 
-## php-wss WebSocketServer library ##
+## php-wss web-socket server library ##
 
 ### Library comes with 3 main options ###
 
