@@ -2,28 +2,12 @@
 
 ## php-wss WebSocketServer library ##
 
-### Library comes with 3 options ###
+### Library comes with 3 main options ###
 
-* 
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+* it`s a web-socket server for multiple connections with decoding/encoding for all events out of the box
+* it has GET url header parser before handshake, so You can easilly use any templates U need
+* multiple process per user connections support, so You can fork processes to speed up performance
 
 ### How do I get set up? ###
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
-
-### Contribution guidelines ###
-
-* Writing tests
-* Code review
-* Other guidelines
-
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
+* Just get the class web_socket_server.php and run it
