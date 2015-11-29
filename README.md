@@ -10,4 +10,4 @@
 
 ### How do I get set up? ###
 
-* Just get the class web_socket_server.php and run it
+* Just get the class web_socket_server.php and run it as cli service
