@@ -5,7 +5,7 @@ Web-socket server application with multi-process and parse templates support
 
 - it`s a web-socket server for multiple connections with decoding/encoding for all events out of the box
 - it has GET uri parser, so You can easilly use any templates 
-- multiple process per user connections support, so You can fork processes to speed up performance desiding how many client-connections should be there
+- multiple process per user connections support, so You can fork processes to speed up performance deciding how many client-connections should be there
 
 ## How do I get set up?
 
