@@ -25,7 +25,7 @@ class WebSocketServer {
   // stream non-blocking 
   const NON_BLOCK = 0;
   // max clients to fork another process
-  const MAX_CLIENTS_REMAINDER_FORK = 2;
+  const MAX_CLIENTS_REMAINDER_FORK = 1000; 
   
   /**
    * CAUTION - PARAMETERS BELOW CAN`T BE CHANGED
