@@ -9,6 +9,18 @@ Web-socket server application with multi-process and parse templates support
 
 ## How do I get set up?
 
-Just get the class web_socket_server.php and run it as cli service
+Preferred way to install is with Composer.
 
-PS U`ll see the processes increase named "php-wss" as connections will grow and decrease while stack will lessen
+Just add
+
+"require": {
+  "arthurkushman/php-wss": "1.0.*"
+}
+
+in your projects composer.json.
+
+OR
+
+Get the class web_socket_server.php and run it as CLI service
+
+PS U`ll see the processes increase named "php-wss" as connections will grow and decrease while stack will lessen.
