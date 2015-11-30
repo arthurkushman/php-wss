@@ -13,13 +13,13 @@ Preferred way to install is with Composer.
 
 Just add
 
-``
+```javascript
 "require": {
 
   "arthurkushman/php-wss": "1.0.*"
   
 }
-``
+```
 
 in your projects composer.json.
 
