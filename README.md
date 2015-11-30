@@ -27,8 +27,8 @@ OR
 
 perform comman in shell
 
-```shell
-$ composer require pusher/pusher-php-server
+```bash
+$ composer require arthurkushman/php-wss
 ```
 
 OR
