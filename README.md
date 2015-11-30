@@ -23,6 +23,14 @@ Just add
 
 in your projects composer.json.
 
+OR 
+
+perform comman in shell
+
+```shell
+$ composer require pusher/pusher-php-server
+```
+
 OR
 
 Get the class web_socket_server.php and run it as CLI service
