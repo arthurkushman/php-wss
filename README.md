@@ -12,11 +12,11 @@ Web-socket server application with multi-process and parse templates support
 Preferred way to install is with Composer.
 
 Just add
-
+``
 "require": {
   "arthurkushman/php-wss": "1.0.*"
 }
-
+``
 in your projects composer.json.
 
 OR
