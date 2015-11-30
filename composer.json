@@ -1,0 +1,9 @@
+{
+    "name": "arthurkushman/php-wss",
+    "description": "Web-socket server with URI parse and multi-process support",
+    "keywords": ["web-sockets","web socket server", "web socket"],
+    "license": "MIT",
+    "require": {
+        "php": ">=5.5.0"
+    }
+}
