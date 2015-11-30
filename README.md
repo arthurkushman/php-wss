@@ -31,6 +31,16 @@ perform comman in shell
 $ composer require arthurkushman/php-wss
 ```
 
+### Then put code bellow to Your CLI script and run
+
+```php
+$websocketServer = new WebSocketServer([
+    'host' => '0.0.0.0',
+    'port' => 8000
+        ]);
+$websocketServer->run();
+```
+
 OR
 
 Get the class web_socket_server.php and run it as CLI service
