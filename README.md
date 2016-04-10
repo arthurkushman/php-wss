@@ -80,5 +80,5 @@ $websocketServer = new WebSocketServer(new ServerMessageHandler(), [
 $websocketServer->run(); 
 ```
 
-PS U`ll see the processes increase named "php-wss" as CPP (Connections Per-Process) connections will grow and decrease while stack will lessen. 
-For instance, I set 100 CPP, if there are 128 connections - You`ll see 2 php-wss process with for ex.: ps aux | grep php-wss
+PS U'll see the processes increase named "php-wss" as CPP (Connections Per-Process) connections will grow and decrease while stack will lessen. 
+For instance, I set 100 CPP, if there are 128 connections - You will be able to see 2 "php-wss" process with for ex.: ps aux | grep php-wss
