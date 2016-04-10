@@ -1,22 +1,41 @@
 <?php
+require_once './src/ICommons.php';
+require_once './src/IConnection.php';
+require_once './src/ConnectionImpl.php';
+require_once './src/IMessage.php';
+require_once './src/IWebSocket.php';
+require_once './src/IWebSocketServer.php';
+require_once './src/IWebSocketMessage.php';
+require_once './src/WebSocketServer.php';
+require_once './src/WebSocketClient.php';
+require_once 'ServerMessageHandler.php';
+
+use WSSC\WebSocketServer;
+use WSSC\WebSocketClient;
 
 /**
  * Create by Arthur Kushman
  */
 class TestWebSocketClients extends PHPUnit_Framework_TestCase {
 
-  public function setUp() {
-    require_once __DIR__ . '/../ws-client.php';
-  }
+    public function setUp() {
+        
+    }
 
-  public function testHundredClients() {
+    public function testRunServer() {
+        $websocketServer = new WebSocketServer(new ServerMessageHandler(), [
+            'host' => '0.0.0.0',
+            'port' => 8000
+        ]);
+        $websocketServer->run();
+    }
 
-//    for ($i = 0; $i < 5;  ++$i) {
-      $WebSocketClient = new WebsocketClient('127.0.0.1', 8000);
-      echo $WebSocketClient->sendData('Client connected ');
+//    public function testWebSocketClients() {
+//        
 //    }
-//    sleep(10);
-//    unset($WebSocketClient);
-  }
+
+    private static function getUserId($token) {
+        return (int) mb_substr($token, self::TOKEN_LEN, null, 'utf-8');
+    }
 
 }

@@ -6,6 +6,6 @@
     "homepage": "https://github.com/arthurkushman/php-wss",
     "require": {
         "php": ">=5.5.0", 
-        "arthurkushman/php-wss": "1.*"
+        "arthurkushman/php-wss": "1.1"
     }
 }

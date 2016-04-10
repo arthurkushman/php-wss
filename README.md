@@ -34,14 +34,14 @@ $ composer require arthurkushman/php-wss
 ### Then put code bellow to Your CLI script and run
 
 ```php
-$websocketServer = new WebSocketServer([
+$websocketServer = new WebSocketServer(new ServerMessageHandler(), [
     'host' => '0.0.0.0',
     'port' => 8000
         ]);
 $websocketServer->run();
 ```
 
-OR
+OR 
 
 Get the class web_socket_server.php and run it as CLI service
 
