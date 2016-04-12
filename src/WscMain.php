@@ -6,9 +6,7 @@ class WscMain implements IWscCommons {
 
     protected $socket, $is_connected = false, $is_closing = false, $last_opcode = null,
             $close_status = null, $huge_payload = null;
-    
-    protected $socketUrl = '';             
-    
+    protected $socketUrl = '';
     protected static $opcodes = [
         'continuation' => 0,
         'text' => 1,
@@ -17,9 +15,8 @@ class WscMain implements IWscCommons {
         'ping' => 9,
         'pong' => 10,
     ];
-
     private $options = [];
-    
+
     protected function connect() {
         $urlParts = parse_url($this->socketUrl);
         $scheme = $urlParts['scheme'];
@@ -161,7 +158,7 @@ class WscMain implements IWscCommons {
 
     public function send($payload, $opcode = 'text', $masked = true) {
         if (!$this->is_connected) {
-            $this->connect(); 
+            $this->connect();
         }
         if (!in_array($opcode, array_keys(self::$opcodes))) {
             throw new BadOpcodeException("Bad opcode '$opcode'.  Try 'text' or 'binary'.");
@@ -192,38 +189,34 @@ class WscMain implements IWscCommons {
 
     protected function send_fragment($final, $payload, $opcode, $masked) {
         // Binary string for header.
-        $frame_head_binstr = '';
-
+        $frameHeadBin = '';
         // Write FIN, final fragment bit.
-        $frame_head_binstr .= (bool) $final ? '1' : '0';
-
+        $frameHeadBin .= (bool) $final ? '1' : '0';
         // RSV 1, 2, & 3 false and unused.
-        $frame_head_binstr .= '000';
-
+        $frameHeadBin .= '000';
         // Opcode rest of the byte.
-        $frame_head_binstr .= sprintf('%04b', self::$opcodes[$opcode]);
-
+        $frameHeadBin .= sprintf('%04b', self::$opcodes[$opcode]);
         // Use masking?
-        $frame_head_binstr .= $masked ? '1' : '0';
+        $frameHeadBin .= $masked ? '1' : '0';
 
         // 7 bits of payload length...
-        $payload_length = strlen($payload);
-        if ($payload_length > self::MAX_BYTES_READ) {
-            $frame_head_binstr .= decbin(self::MASK_127);
-            $frame_head_binstr .= sprintf('%064b', $payload_length);
-        } else if ($payload_length > self::MASK_125) {
-            $frame_head_binstr .= decbin(self::MASK_126);
-            $frame_head_binstr .= sprintf('%016b', $payload_length);
+        $payloadLen = strlen($payload);
+        if ($payloadLen > self::MAX_BYTES_READ) {
+            $frameHeadBin .= decbin(self::MASK_127);
+            $frameHeadBin .= sprintf('%064b', $payloadLen);
+        } else if ($payloadLen > self::MASK_125) {
+            $frameHeadBin .= decbin(self::MASK_126);
+            $frameHeadBin .= sprintf('%016b', $payloadLen);
         } else {
-            $frame_head_binstr .= sprintf('%07b', $payload_length);
+            $frameHeadBin .= sprintf('%07b', $payloadLen);
         }
 
         $frame = '';
 
         // Write frame head to frame.
-        foreach (str_split($frame_head_binstr, 8) as $binstr)
+        foreach (str_split($frameHeadBin, 8) as $binstr) {
             $frame .= chr(bindec($binstr));
-
+        }
         // Handle masking
         if ($masked) {
             // generate a random mask:
@@ -234,7 +227,7 @@ class WscMain implements IWscCommons {
         }
 
         // Append payload to frame:
-        for ($i = 0; $i < $payload_length; $i++) {
+        for ($i = 0; $i < $payloadLen; $i++) {
             $frame .= ($masked === true) ? $payload[$i] ^ $mask[$i % 4] : $payload[$i];
         }
 
@@ -243,7 +236,7 @@ class WscMain implements IWscCommons {
 
     public function receive() {
         if (!$this->is_connected) {
-            $this->connect(); 
+            $this->connect();
         }
         $this->huge_payload = '';
 
@@ -320,31 +313,25 @@ class WscMain implements IWscCommons {
                 $this->close_status = $status;
                 $payload = substr($payload, 2);
 
-                if (!$this->is_closing)
+                if (!$this->is_closing) {
                     $this->send($status_bin . 'Close acknowledged: ' . $status, 'close', true); // Respond.
+                }
             }
 
-            if ($this->is_closing)
+            if ($this->is_closing) {
                 $this->is_closing = false; // A close response, all done.
+            }
 
-
-
-
-
-                
-// And close the socket.
             fclose($this->socket);
             $this->is_connected = false;
         }
 
-        // if this is not the last fragment, then we need to save the payload
         if (!$final) {
             $this->huge_payload .= $payload;
             return null;
         }
         // this is the last fragment, and we are processing a huge_payload
         else if ($this->huge_payload) {
-            // sp we need to retreive the whole payload
             $payload = $this->huge_payload .= $payload;
             $this->huge_payload = null;
         }
@@ -381,15 +368,15 @@ class WscMain implements IWscCommons {
         }
     }
 
-    protected function read($length) {
+    protected function read($len) {
         $data = '';
-        while (strlen($data) < $length) {
-            $buff = fread($this->socket, $length - strlen($data));
+        while (($dataLen = strlen($data)) < $len) {
+            $buff = fread($this->socket, $len - $dataLen);
             if ($buff === false) {
                 $metadata = stream_get_meta_data($this->socket);
                 throw new ConnectionException(
                 'Broken frame, read ' . strlen($data) . ' of stated '
-                . $length . ' bytes.  Stream state: '
+                . $len . ' bytes.  Stream state: '
                 . json_encode($metadata)
                 );
             }
