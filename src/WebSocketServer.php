@@ -46,7 +46,7 @@ class WebSocketServer implements IWebSocketServer, ICommons {
     public function run() {
         $errno = null;
         $errorMessage = '';
-        
+
         $server = stream_socket_server("tcp://{$this->config['host']}:{$this->config['port']}", $errno, $errorMessage);
         if ($server === false) {
             die('Could not bind to socket: ' . $errno . ' - ' . $errorMessage . PHP_EOL);
@@ -118,14 +118,14 @@ class WebSocketServer implements IWebSocketServer, ICommons {
                     //delete the server socket from the read sockets
                     unset($readSocks[array_search($server, $readSocks)]);
                 }
-                
+
                 //message from existing client
                 foreach ($readSocks as $kSock => $sock) {
                     $data = $this->decode(fread($sock, self::MAX_BYTES_READ));
                     $dataType = $data['type'];
                     $dataPayload = $data['payload'];
                     // to manipulate connection through send/close methods via handler, specified in IConnection
-                    $this->cureentConn = $this->connImpl->getConnection($sock);                    
+                    $this->cureentConn = $this->connImpl->getConnection($sock);
                     if (empty($data) || $dataType === self::EVENT_TYPE_CLOSE) { // close event triggered from client - browser tab or close socket event
                         // trigger CLOSE event
                         try {
@@ -141,6 +141,7 @@ class WebSocketServer implements IWebSocketServer, ICommons {
                     if ($dataType === self::EVENT_TYPE_TEXT) {
                         // trigger MESSAGE event
                         try {
+                            echo 'trigger MESSAGE event';
                             $this->handler->onMessage($this->cureentConn, $dataPayload);
                         } catch (WebSocketException $e) {
                             $e->printStack();
@@ -174,10 +175,11 @@ class WebSocketServer implements IWebSocketServer, ICommons {
      * @param string $data
      * @return mixed null on empty data|false on improper data|array - on success
      */
-    private function decode($data) {
-        if (empty($data))
+    private function decode($data) {        
+        if (empty($data)) {
             return null; // close has been sent
-
+        }
+        
         $unmaskedPayload = '';
         $decodedData = [];
 
@@ -271,7 +273,6 @@ class WebSocketServer implements IWebSocketServer, ICommons {
         $match = [];
         $key = empty($this->handshakes[intval($client)]) ? 0 : $this->handshakes[intval($client)];
         preg_match(self::SEC_WEBSOCKET_KEY_PTRN, $headers, $match);
-
         if (empty($match[1])) {
             return false;
         }
@@ -296,10 +297,10 @@ class WebSocketServer implements IWebSocketServer, ICommons {
         $this->headersUpgrade = [
             self::HEADERS_UPGRADE_KEY => self::HEADERS_UPGRADE_VALUE,
             self::HEADERS_CONNECTION_KEY => self::HEADERS_CONNECTION_VALUE,
-            self::HEADERS_SEC_WEBSOCKET_ACCEPT_KEY => $secWebSocketAccept
+            self::HEADERS_SEC_WEBSOCKET_ACCEPT_KEY => ' '.$secWebSocketAccept // the space before key is really important
         ];
     }
-    
+
     /**
      * Retreives headers from an array of headers to upgrade server/client connection 
      * @return string   Headers to Upgrade communication connection
@@ -338,7 +339,7 @@ class WebSocketServer implements IWebSocketServer, ICommons {
                 // clear the declaration of parsed param
                 unset($this->handler->pathParams[array_search($param, $this->handler->pathParams)]);
                 $left = substr($left, strpos($left, '/', 1));
-            }            
+            }
         }
     }
 

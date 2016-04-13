@@ -10,7 +10,7 @@ class WebSocketClient extends WscMain {
      * @param string $url   string representation of a socket utf, ex.: tcp://www.example.com:8000 or udp://example.com:13
      * @param array $config ex.: 
      */
-    public function __construct($url, $config) {
+    public function __construct($url, $config = []) {
         $this->socketUrl = $url;
         $this->socketOptions = $config;
         if (!array_key_exists('timeout', $this->socketOptions)) {

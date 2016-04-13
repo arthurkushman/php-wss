@@ -15,7 +15,7 @@ class WscMain implements IWscCommons {
         'ping' => 9,
         'pong' => 10,
     ];
-    private $options = [];
+    protected $options = [];
 
     protected function connect() {
         $urlParts = parse_url($this->socketUrl);
@@ -77,7 +77,7 @@ class WscMain implements IWscCommons {
             'User-Agent' => 'websocket-client-php',
             'Connection' => 'Upgrade',
             'Upgrade' => 'WebSocket',
-            'Sec-Websocket-Key' => $key,
+            'Sec-WebSocket-Key' => $key,
             'Sec-Websocket-Version' => '13',
         ];
 
@@ -100,13 +100,10 @@ class WscMain implements IWscCommons {
                         )
                 )
                 . "\r\n\r\n";
-
         // Send headers.
-        $this->write($header);
-
+        $this->write($header);        
         // Get server response header 
         $response = stream_get_line($this->socket, self::DEFAULT_RESPONSE_HEADER, "\r\n\r\n");
-
         /// @todo Handle version switching
         // Validate response.
         if (!preg_match(self::SEC_WEBSOCKET_ACCEPT_PTTRN, $response, $matches)) {
@@ -163,7 +160,7 @@ class WscMain implements IWscCommons {
         if (!in_array($opcode, array_keys(self::$opcodes))) {
             throw new BadOpcodeException("Bad opcode '$opcode'.  Try 'text' or 'binary'.");
         }
-
+        echo $payload;
         // record the length of the payload
         $payload_length = strlen($payload);
 

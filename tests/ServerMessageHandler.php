@@ -20,7 +20,8 @@ class ServerMessageHandler implements IWebSocketMessage {
         echo 'Connection opend, total clients: ' . count($this->clients) . PHP_EOL;
     }
 
-    public function onMessage(IConnection $recv, $msg) {        
+    public function onMessage(IConnection $recv, $msg) {
+        echo 'Received message:  ' . $msg . PHP_EOL;
         $recv->send($msg);
     }
 
@@ -30,7 +31,7 @@ class ServerMessageHandler implements IWebSocketMessage {
     }
 
     public function onError(IConnection $conn, WebSocketException $ex) {
-        echo 'Error occured: '.$ex->printStack();
+        echo 'Error occured: ' . $ex->printStack();
     }
 
 }

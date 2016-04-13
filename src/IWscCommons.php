@@ -24,15 +24,4 @@ interface IWscCommons {
 
     const KEY_GEN_LENGTH = 16;
     
-    function connect();
-    
-    function read();
-    
-    function write();
-    
-    function send();
-    
-    function close();
-    
-    function receive();
 }
