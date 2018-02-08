@@ -1,13 +1,13 @@
 <?php
+
 namespace WSSC;
 /**
  *
  * @author Arthur Kushman
  */
-interface IConnection {
-    
-    function send($data);
-    
-    function close();
-    
+interface IConnection
+{
+    public function send($data);
+
+    public function close();
 }

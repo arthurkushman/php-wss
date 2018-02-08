@@ -1,11 +1,13 @@
 <?php
+
 namespace WSSC;
 /**
  *
  * @author Arthur Kushman
+ * @property array $pathParams
  */
-interface IWebSocketMessage extends IWebSocket, IMessage {
-    
+interface IWebSocketMessage extends IWebSocket, IMessage
+{
     /**
      * You may want to implement these methods to bring ping/pong events
      * @param \WSSC\IConnection $conn

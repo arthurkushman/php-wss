@@ -1,14 +1,15 @@
 <?php
+
 namespace WSSC;
 /**
  *
  * @author Arthur Kushman
  */
-interface IWebSocket {
-    
-    function onOpen(IConnection $conn);
-    
-    function onClose(IConnection $conn);
-    
-    function onError(IConnection $conn, WebSocketException $ex);
+interface IWebSocket
+{
+    public function onOpen(IConnection $conn);
+
+    public function onClose(IConnection $conn);
+
+    public function onError(IConnection $conn, WebSocketException $ex);
 }

@@ -1,11 +1,11 @@
 <?php
+
 namespace WSSC;
 /**
  *
  * @author Arthur Kushman
  */
-interface IMessage {
-    
-    function onMessage(IConnection $recv, $msg);
-    
+interface IMessage
+{
+    public function onMessage(IConnection $recv, $msg);
 }
