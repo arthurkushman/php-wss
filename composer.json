@@ -1,7 +1,14 @@
 {
     "name": "arthurkushman/php-wss",
     "description": "Web-socket server with URI parse and multi-process support",
-    "keywords": ["web-sockets","web socket server", "web socket", "processes", "routes", "php"],
+    "keywords": [
+        "web-sockets",
+        "web socket server",
+        "web socket",
+        "processes",
+        "routes",
+        "php"
+    ],
     "license": "MIT",
     "homepage": "https://github.com/arthurkushman/php-wss",
     "require": {
@@ -9,14 +16,14 @@
     },
     "autoload": {
         "psr-4": {
-            "wss\\": "src",
-            "wsstest\\": "tests"
+            "WSSC\\": "src",
+            "WSSCTEST\\": "tests"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "wss\\": "src",
-            "wsstest\\": "tests"
+            "WSSC\\": "src",
+            "WSSCTEST\\": "tests"
         }
     },
     "require-dev": {

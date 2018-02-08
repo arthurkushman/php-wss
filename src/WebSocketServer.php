@@ -58,7 +58,7 @@ class WebSocketServer implements IWebSocketServer, ICommons {
     /**
      * Recursive event loop that input intu recusion by remainder = 0 - thus when N users, 
      * and when forks equals true which prevents it from infinite recursive iterations
-     * @param source $server  server connection
+     * @param resource $server  server connection
      * @param bool $fork      flag to fork or run event loop
      */
     private function eventLoop($server, $fork = false) {
