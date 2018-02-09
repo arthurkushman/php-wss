@@ -13,9 +13,11 @@ class WebSocketClientTest extends TestCase
      */
     public function is_client_connected()
     {
+        echo 'Running client...' . PHP_EOL;
+        $recvMsg = '{"user_id" : 123}';
         $client = new WebSocketClient('ws://localhost:8000/notifications/messanger/vkjsndfvjn23243');
-        $client->send('{"user_id" : 123}');
-        echo $client->receive();
-        $client->close();
+        $client->send($recvMsg);
+        $recv = $client->receive();
+        $this->assertEquals($recv, $recvMsg);
     }
 }

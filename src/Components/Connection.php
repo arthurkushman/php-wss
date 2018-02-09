@@ -1,6 +1,6 @@
 <?php
 
-namespace WSSC;
+namespace WSSC\Components;
 
 use WSSC\Contracts\CommonsContract;
 use WSSC\Contracts\ConnectionContract;

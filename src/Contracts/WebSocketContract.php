@@ -1,6 +1,9 @@
 <?php
 
 namespace WSSC\Contracts;
+
+use WSSC\Exceptions\WebSocketException;
+
 /**
  *
  * @author Arthur Kushman

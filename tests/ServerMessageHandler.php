@@ -1,10 +1,12 @@
 <?php
 
+namespace WSSCTEST;
+
 use WSSC\Contracts\ConnectionContract;
 use WSSC\Contracts\WebSocketMessageContract;
 use WSSC\Exceptions\WebSocketException;
 
-class ServerMessageContractHandler implements WebSocketMessageContract
+class ServerMessageHandler implements WebSocketMessageContract
 {
 
     /*
@@ -35,6 +37,10 @@ class ServerMessageContractHandler implements WebSocketMessageContract
         $conn->close();
     }
 
+    /**
+     * @param ConnectionContract $conn
+     * @param WebSocketException $ex
+     */
     public function onError(ConnectionContract $conn, WebSocketException $ex)
     {
         echo 'Error occured: ' . $ex->printStack();

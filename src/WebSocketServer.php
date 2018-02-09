@@ -2,6 +2,7 @@
 
 namespace WSSC;
 
+use WSSC\Components\Connection;
 use WSSC\Contracts\CommonsContract;
 use WSSC\Contracts\WebSocketMessageContract;
 use WSSC\Contracts\WebSocketServerContract;
@@ -59,7 +60,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
         if ($server === false) {
             die('Could not bind to socket: ' . $errno . ' - ' . $errorMessage . PHP_EOL);
         }
-        cli_set_process_title(self::PROC_TITLE);
+        @cli_set_process_title(self::PROC_TITLE);
         $this->eventLoop($server);
     }
 
@@ -75,7 +76,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
             $pid = pcntl_fork();
 
             if ($pid) { // run eventLoop in parent        
-                cli_set_process_title(self::PROC_TITLE);
+                @cli_set_process_title(self::PROC_TITLE);
                 $this->eventLoop($server);
             }
         } else {
