@@ -1,8 +1,12 @@
 <?php
 
-namespace WSSC;
+namespace WSSC\Components;
 
-class WscMain implements IWscCommons
+use WSSC\Contracts\WscCommonsContract;
+use WSSC\Exceptions\BadUriException;
+use WSSC\Exceptions\ConnectionException;
+
+class WscMain implements WscCommonsContract
 {
 
     protected $socket, $is_connected = false, $is_closing = false, $last_opcode = NULL,

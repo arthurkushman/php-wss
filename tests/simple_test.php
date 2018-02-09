@@ -9,7 +9,7 @@ require_once './src/IWebSocketServer.php';
 require_once './src/IWebSocketMessage.php';
 require_once './src/WebSocketServer.php';
 require_once './src/WebSocketClient.php';
-require_once 'ServerMessageHandler.php';
+require_once 'ServerMessageContractHandler.php';
 
 use WSSC\WebSocketServer;
 use WSSC\WebSocketClient;
@@ -17,7 +17,7 @@ use WSSC\WebSocketClient;
 /**
  * Create by Arthur Kushman
  */
-$websocketServer = new WebSocketServer(new ServerMessageHandler(), [
+$websocketServer = new WebSocketServer(new ServerMessageContractHandler(), [
     'host' => '0.0.0.0',
     'port' => 8000
         ]);

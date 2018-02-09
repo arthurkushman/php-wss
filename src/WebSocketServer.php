@@ -2,10 +2,14 @@
 
 namespace WSSC;
 
+use WSSC\Contracts\CommonsContract;
+use WSSC\Contracts\WebSocketMessageContract;
+use WSSC\Contracts\WebSocketServerContract;
+
 /**
  * Create by Arthur Kushman
  */
-class WebSocketServer implements IWebSocketServer, ICommons
+class WebSocketServer implements WebSocketServerContract, CommonsContract
 {
 
     private $clients = [],
@@ -32,14 +36,14 @@ class WebSocketServer implements IWebSocketServer, ICommons
     const MAX_CLIENTS_REMAINDER_FORK = 1000;
     const PROC_TITLE = 'php-wss';
 
-    public function __construct(IWebSocketMessage $handler, $config = [
+    public function __construct(WebSocketMessageContract $handler, $config = [
         'host' => self::DEFAULT_HOST,
         'port' => self::DEFAULT_PORT])
     {
         ini_set('default_socket_timeout', 5); // this should be >= 5 sec, otherwise there will be broken pipe - tested
         $this->handler = $handler;
         $this->config = $config;
-        $this->connImpl = new ConnectionImpl();
+        $this->connImpl = new Connection();
     }
 
     /**
@@ -333,7 +337,7 @@ class WebSocketServer implements IWebSocketServer, ICommons
      */
     private function setPathParams($headers)
     {
-        /** @var IWebSocketMessage $handler */
+        /** @var WebSocketMessageContract $handler */
         if (!empty($this->handler->pathParams)) {
             $matches = [];
             preg_match('/GET\s(.*?)\s/', $headers, $matches);

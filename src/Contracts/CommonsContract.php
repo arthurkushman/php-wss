@@ -1,12 +1,12 @@
 <?php
 
-namespace WSSC;
+namespace WSSC\Contracts;
 
 /**
  *
  * @author Arthur Kushman
  */
-interface ICommons {
+interface CommonsContract {
 
     // DADA types
     const EVENT_TYPE_PING = 'ping',

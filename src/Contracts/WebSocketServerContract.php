@@ -1,12 +1,12 @@
 <?php
 
-namespace WSSC;
+namespace WSSC\Contracts;
 
 /**
  *
  * @author Arthur Kushman
  */
-interface IWebSocketServer {
+interface WebSocketServerContract {
 
     // HOST/PORT
     const DEFAULT_HOST = '0.0.0.0', 
