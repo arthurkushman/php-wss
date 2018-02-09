@@ -235,7 +235,7 @@ class WscMain implements WscCommonsContract
             // generate a random mask:
             $mask = '';
             for ($i = 0; $i < 4; $i++) {
-                $mask .= chr(mt_rand(0, 255));
+                $mask .= chr(random_int(0, 255));
             }
             $frame .= $mask;
         }
@@ -434,7 +434,7 @@ class WscMain implements WscCommonsContract
         $key = '';
         $chLen = strlen($chars);
         for ($i = 0; $i < self::KEY_GEN_LENGTH; $i++) {
-            $key .= $chars[mt_rand(0, $chLen - 1)];
+            $key .= $chars[random_int(0, $chLen - 1)];
         }
         return base64_encode($key);
     }

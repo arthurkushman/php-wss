@@ -11,7 +11,11 @@ class Connection implements ConnectionContract, CommonsContract
 
     private $socketConnection;
 
-    public function getConnection($sockConn)
+    /**
+     * @param $sockConn
+     * @return $this
+     */
+    public function getConnection($sockConn): self
     {
         $this->socketConnection = $sockConn;
         return $this;
@@ -20,7 +24,7 @@ class Connection implements ConnectionContract, CommonsContract
     /**
      * Closes clients socket stream
      */
-    public function close()
+    public function close(): void
     {
         if (is_resource($this->socketConnection)) {
             fclose($this->socketConnection);
@@ -33,7 +37,7 @@ class Connection implements ConnectionContract, CommonsContract
      *
      * @param string $data pure decoded data from server
      */
-    public function send($data)
+    public function send($data): void
     {
         fwrite($this->socketConnection, $this->encode($data));
     }
@@ -101,7 +105,7 @@ class Connection implements ConnectionContract, CommonsContract
         $mask = [];
         if ($masked === true) {
             for ($i = 0; $i < 4; $i++) {
-                $mask[$i] = chr(mt_rand(0, self::MASK_255));
+                $mask[$i] = chr(random_int(0, self::MASK_255));
             }
 
             $frameHead = array_merge($frameHead, $mask);
