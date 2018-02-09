@@ -3,16 +3,21 @@
 namespace WSSC\Components;
 
 use WSSC\Contracts\WscCommonsContract;
+use WSSC\Exceptions\BadOpcodeException;
 use WSSC\Exceptions\BadUriException;
 use WSSC\Exceptions\ConnectionException;
 
 class WscMain implements WscCommonsContract
 {
 
-    protected $socket, $is_connected = false, $is_closing = false, $last_opcode = NULL,
-        $close_status = NULL, $huge_payload = NULL;
-    protected $socketUrl = '';
-    protected static $opcodes = [
+    private $socket;
+    private $isConnected = false;
+    private $isClosing = false;
+    private $lastOpcode;
+    private $closeStatus;
+    private $hugePayload;
+
+    private static $opcodes = [
         'continuation' => 0,
         'text'         => 1,
         'binary'       => 2,
@@ -20,9 +25,15 @@ class WscMain implements WscCommonsContract
         'ping'         => 9,
         'pong'         => 10,
     ];
+
+    protected $socketUrl = '';
     protected $options = [];
 
-    protected function connect()
+    /**
+     * @throws BadUriException
+     * @throws ConnectionException
+     */
+    protected function connect(): void
     {
         $urlParts = parse_url($this->socketUrl);
         $scheme = $urlParts['scheme'];
@@ -44,7 +55,7 @@ class WscMain implements WscCommonsContract
 
         if (!in_array($scheme, ['ws', 'wss'])) {
             throw new BadUriException(
-                "Url should have scheme ws or wss, not '$scheme' from URI '$this->socket_uri' ."
+                "Url should have scheme ws or wss, not '$scheme' from URI '$this->socketUrl' ."
             );
         }
 
@@ -129,22 +140,22 @@ class WscMain implements WscCommonsContract
             throw new ConnectionException('Server sent bad upgrade response.');
         }
 
-        $this->is_connected = true;
+        $this->isConnected = true;
     }
 
     public function getLastOpcode()
     {
-        return $this->last_opcode;
+        return $this->lastOpcode;
     }
 
     public function getCloseStatus()
     {
-        return $this->close_status;
+        return $this->closeStatus;
     }
 
     public function isConnected()
     {
-        return $this->is_connected;
+        return $this->isConnected;
     }
 
     public function setTimeout($timeout)
@@ -169,7 +180,7 @@ class WscMain implements WscCommonsContract
 
     public function send($payload, $opcode = 'text', $masked = true)
     {
-        if (!$this->is_connected) {
+        if (!$this->isConnected) {
             $this->connect();
         }
         if (array_key_exists($opcode, self::$opcodes) === false) {
@@ -192,14 +203,14 @@ class WscMain implements WscCommonsContract
             $final = $payload_length <= $fragment_cursor;
 
             // send the fragment
-            $this->send_fragment($final, $sub_payload, $opcode, $masked);
+            $this->sendFragment($final, $sub_payload, $opcode, $masked);
 
             // all fragments after the first will be marked a continuation
             $opcode = 'continuation';
         }
     }
 
-    protected function send_fragment($final, $payload, $opcode, $masked)
+    protected function sendFragment($final, $payload, $opcode, $masked)
     {
         // Binary string for header.
         $frameHeadBin = '';
@@ -250,19 +261,19 @@ class WscMain implements WscCommonsContract
 
     public function receive()
     {
-        if (!$this->is_connected) {
+        if (!$this->isConnected) {
             $this->connect();
         }
-        $this->huge_payload = '';
+        $this->hugePayload = '';
 
         $response = NULL;
         while (NULL === $response) {
-            $response = $this->receive_fragment();
+            $response = $this->receiveFragment();
         }
         return $response;
     }
 
-    protected function receive_fragment()
+    protected function receiveFragment()
     {
         // Just read the main fragment information first.
         $data = $this->read(2);
@@ -285,7 +296,7 @@ class WscMain implements WscCommonsContract
 
         // record the opcode if we are not receiving a continutation fragment
         if ($opcode !== 'continuation') {
-            $this->last_opcode = $opcode;
+            $this->lastOpcode = $opcode;
         }
 
         // Masking?
@@ -327,30 +338,30 @@ class WscMain implements WscCommonsContract
             if ($payload_length >= 2) {
                 $status_bin = $payload[0] . $payload[1];
                 $status = bindec(sprintf('%08b%08b', ord($payload[0]), ord($payload[1])));
-                $this->close_status = $status;
+                $this->closeStatus = $status;
                 $payload = substr($payload, 2);
 
-                if (!$this->is_closing) {
+                if (!$this->isClosing) {
                     $this->send($status_bin . 'Close acknowledged: ' . $status, 'close'); // Respond.
                 }
             }
 
-            if ($this->is_closing) {
-                $this->is_closing = false; // A close response, all done.
+            if ($this->isClosing) {
+                $this->isClosing = false; // A close response, all done.
             }
 
             fclose($this->socket);
-            $this->is_connected = false;
+            $this->isConnected = false;
         }
 
         if (!$final) {
-            $this->huge_payload .= $payload;
+            $this->hugePayload .= $payload;
             return NULL;
         } // this is the last fragment, and we are processing a huge_payload
 
-        if ($this->huge_payload) {
-            $payload = $this->huge_payload .= $payload;
-            $this->huge_payload = NULL;
+        if ($this->hugePayload) {
+            $payload = $this->hugePayload .= $payload;
+            $this->hugePayload = NULL;
         }
 
         return $payload;
@@ -363,7 +374,7 @@ class WscMain implements WscCommonsContract
      * @param string $message A closing message, max 125 bytes.
      * @return bool|null|string
      */
-    public function close($status = 1000, $message = 'ttfn')
+    public function close(int $status = 1000, string $message = 'ttfn')
     {
         $statusBin = sprintf('%016b', $status);
         $status_str = '';
@@ -371,11 +382,15 @@ class WscMain implements WscCommonsContract
             $status_str .= chr(bindec($binstr));
         }
         $this->send($status_str . $message, 'close', true);
-        $this->is_closing = true;
+        $this->isClosing = true;
         return $this->receive(); // Receiving a close frame will close the socket now.
     }
 
-    protected function write($data)
+    /**
+     * @param $data
+     * @throws ConnectionException
+     */
+    protected function write(string $data): void
     {
         $written = fwrite($this->socket, $data);
 
@@ -386,7 +401,12 @@ class WscMain implements WscCommonsContract
         }
     }
 
-    protected function read($len)
+    /**
+     * @param int $len
+     * @return string
+     * @throws ConnectionException
+     */
+    protected function read(int $len): string
     {
         $data = '';
         while (($dataLen = strlen($data)) < $len) {
@@ -412,8 +432,11 @@ class WscMain implements WscCommonsContract
 
     /**
      * Helper to convert a binary to a string of '0' and '1'.
+     *
+     * @param $string
+     * @return string
      */
-    protected static function sprintB($string)
+    protected static function sprintB(string $string): string
     {
         $return = '';
         $strLen = strlen($string);
@@ -428,7 +451,7 @@ class WscMain implements WscCommonsContract
      *
      * @return string   the 16 character length key
      */
-    private function generateKey()
+    private function generateKey(): string
     {
         $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"$&/()=[]{}0123456789';
         $key = '';

@@ -14,17 +14,17 @@ use WSSC\Exceptions\WebSocketException;
 class WebSocketServer implements WebSocketServerContract, CommonsContract
 {
 
-    private $clients = [],
-        // set any template You need ex.: GET /subscription/messenger/token
-        $pathParams = [],
-        $config = [],
-        $handshakes = [],
-        $headersUpgrade = [],
-        $totalClients = 0,
-        $maxClients = 1,
-        $handler = null,
-        $connImpl = null;
-    private $cureentConn = null;
+    private $clients = [];
+    // set any template You need ex.: GET /subscription/messenger/token
+    private $pathParams = [];
+    private $config;
+    private $handshakes = [];
+    private $headersUpgrade = [];
+    private $totalClients = 0;
+    private $maxClients = 1;
+    private $handler;
+    private $connImpl;
+    private $cureentConn;
     // for the very 1st time must be true
     private $stepRecursion = true;
 
@@ -36,12 +36,15 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
     const NON_BLOCK = 0;
     // max clients to fork another process
     const MAX_CLIENTS_REMAINDER_FORK = 1000;
-    const PROC_TITLE = 'php-wss';
+    const PROC_TITLE                 = 'php-wss';
 
-    public function __construct(WebSocketMessageContract $handler, $config = [
-        'host' => self::DEFAULT_HOST,
-        'port' => self::DEFAULT_PORT])
-    {
+    public function __construct(
+        WebSocketMessageContract $handler,
+        $config = [
+            'host' => self::DEFAULT_HOST,
+            'port' => self::DEFAULT_PORT,
+        ]
+    ) {
         ini_set('default_socket_timeout', 5); // this should be >= 5 sec, otherwise there will be broken pipe - tested
         $this->handler = $handler;
         $this->config = $config;
@@ -53,7 +56,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      */
     public function run()
     {
-        $errno = null;
+        $errno = NULL;
         $errorMessage = '';
 
         $server = stream_socket_server("tcp://{$this->config['host']}:{$this->config['port']}", $errno, $errorMessage);
@@ -67,8 +70,9 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
     /**
      * Recursive event loop that input intu recusion by remainder = 0 - thus when N users,
      * and when forks equals true which prevents it from infinite recursive iterations
+     *
      * @param resource $server server connection
-     * @param bool $fork flag to fork or run event loop
+     * @param bool $fork       flag to fork or run event loop
      */
     private function eventLoop($server, $fork = false)
     {
@@ -115,7 +119,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
                     $newClient = stream_socket_accept($server, 0); // must be 0 to non-block          
                     if ($newClient) {
                         // print remote client information, ip and port number
-//                        $socketName = stream_socket_get_name($newClient, true);
+                        //                        $socketName = stream_socket_get_name($newClient, true);
                         // important to read from headers here coz later client will change and there will be only msgs on pipe
                         $headers = fread($newClient, self::HEADER_BYTES_READ);
                         if (empty($this->handler->pathParams[0]) === false) {
@@ -184,13 +188,14 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
 
     /**
      * Message frames decoder
+     *
      * @param string $data
      * @return mixed null on empty data|false on improper data|array - on success
      */
     private function decode($data)
     {
         if (empty($data)) {
-            return null; // close has been sent
+            return NULL; // close has been sent
         }
 
         $unmaskedPayload = '';
@@ -278,11 +283,12 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
 
     /**
      * Handshakes/upgrade and key parse
+     *
      * @param resource $client Source client socket to write
-     * @param string $headers Headers that client has been sent
+     * @param string $headers  Headers that client has been sent
      * @return string   socket handshake key (Sec-WebSocket-Key)| false on parse error
      */
-    private function handshake($client, $headers)
+    private function handshake($client, string $headers): string
     {
         $match = [];
         $key = empty($this->handshakes[(int)$client]) ? 0 : $this->handshakes[(int)$client];
@@ -305,6 +311,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
 
     /**
      * Sets an array of headers needed to upgrade server/client connection
+     *
      * @param string $secWebSocketAccept base64 encoded Sec-WebSocket-Accept header
      */
     private function setHeadersUpgrade($secWebSocketAccept)
@@ -318,9 +325,10 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
 
     /**
      * Retreives headers from an array of headers to upgrade server/client connection
+     *
      * @return string   Headers to Upgrade communication connection
      */
-    private function getHeadersUpgrade()
+    private function getHeadersUpgrade(): string
     {
         $handShakeHeaders = self::HEADER_HTTP1_1 . self::HEADERS_EOL;
         if (empty($this->headersUpgrade)) {
@@ -337,9 +345,10 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
 
     /**
      * Parses parameters from GET on web-socket client connection before handshake
+     *
      * @param string $headers
      */
-    private function setPathParams($headers)
+    private function setPathParams(string $headers): void
     {
         /** @var WebSocketMessageContract $handler */
         if (empty($this->handler->pathParams) === false) {

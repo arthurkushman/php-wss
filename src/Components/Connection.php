@@ -50,7 +50,7 @@ class Connection implements ConnectionContract, CommonsContract
      * @param boolean $masked
      * @return mixed
      */
-    private function encode($payload, $type = self::EVENT_TYPE_TEXT, $masked = false)
+    private function encode($payload, string $type = self::EVENT_TYPE_TEXT, bool $masked = false)
     {
         $frameHead = [];
         $payloadLength = strlen($payload);

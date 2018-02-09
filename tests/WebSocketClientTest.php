@@ -8,10 +8,10 @@ use WSSC\WebSocketClient;
 class WebSocketClientTest extends TestCase
 {
 
-    private const WS_SCHEME = 'ws://';
-    private const WS_HOST   = 'localhost';
-    private const WS_PORT   = ':8000';
-    private const WS_URI    = '/notifications/messanger/vkjsndfvjn23243';
+    const WS_SCHEME = 'ws://';
+    const WS_HOST   = 'localhost';
+    const WS_PORT   = ':8000';
+    const WS_URI    = '/notifications/messanger/vkjsndfvjn23243';
 
     private $url;
 
