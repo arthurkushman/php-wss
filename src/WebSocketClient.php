@@ -2,6 +2,8 @@
 
 namespace WSSC;
 
+use WSSC\Components\WscMain;
+
 class WebSocketClient extends WscMain {
 
     private $socketOptions = [];   

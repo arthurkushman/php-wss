@@ -1,0 +1,12 @@
+<phpunit bootstrap="./tests/_bootstrap.php" colors="true">
+    <testsuites>
+        <testsuite name="BaseController">
+            <directory suffix="Test.php" phpVersion="7.1" phpVersionOperator=">=">./tests/</directory>
+        </testsuite>
+    </testsuites>
+    <filter>
+        <whitelist addUncoveredFilesFromWhitelist="true">
+            <directory>./src/</directory>
+        </whitelist>
+    </filter>
+</phpunit>

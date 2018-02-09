@@ -1,12 +1,18 @@
 <?php
 
-namespace WSSC;
+namespace WSSC\Components;
 
-class ConnectionImpl implements IConnection, ICommons {
+use WSSC\Contracts\CommonsContract;
+use WSSC\Contracts\ConnectionContract;
+use WSSC\Contracts\WebSocketServerContract;
+
+class Connection implements ConnectionContract, CommonsContract
+{
 
     private $socketConnection;
 
-    public function getConnection($sockConn) {
+    public function getConnection($sockConn)
+    {
         $this->socketConnection = $sockConn;
         return $this;
     }
@@ -14,29 +20,34 @@ class ConnectionImpl implements IConnection, ICommons {
     /**
      * Closes clients socket stream
      */
-    public function close() {
+    public function close()
+    {
         if (is_resource($this->socketConnection)) {
             fclose($this->socketConnection);
         }
     }
 
     /**
-     * This method is invoked when user implementation call $conn->send($data) 
+     * This method is invoked when user implementation call $conn->send($data)
      * writes data to the clients stream socket
-     * @param stirng $data  pure decoded data from server
+     *
+     * @param string $data pure decoded data from server
      */
-    public function send($data) {
+    public function send($data)
+    {
         fwrite($this->socketConnection, $this->encode($data));
     }
 
     /**
      * Encodes data before writing to the client socket stream
+     *
      * @param string $payload
      * @param string $type
      * @param boolean $masked
-     * @return type
+     * @return mixed
      */
-    private function encode($payload, $type = self::EVENT_TYPE_TEXT, $masked = false) {
+    private function encode($payload, $type = self::EVENT_TYPE_TEXT, $masked = false)
+    {
         $frameHead = [];
         $payloadLength = strlen($payload);
 
@@ -71,7 +82,7 @@ class ConnectionImpl implements IConnection, ICommons {
             }
             // most significant bit MUST be 0
             if ($frameHead[2] > self::MASK_127) {
-                return ['type' => $type, 'payload' => $payload, 'error' => self::ERR_FRAME_TOO_LARGE];
+                return ['type' => $type, 'payload' => $payload, 'error' => WebSocketServerContract::ERR_FRAME_TOO_LARGE];
             }
         } elseif ($payloadLength > self::MASK_125) {
             $payloadLengthBin = str_split(sprintf('%016b', $payloadLength), self::PAYLOAD_CHUNK);
@@ -86,11 +97,11 @@ class ConnectionImpl implements IConnection, ICommons {
         foreach (array_keys($frameHead) as $i) {
             $frameHead[$i] = chr($frameHead[$i]);
         }
+        // generate a random mask:
+        $mask = [];
         if ($masked === true) {
-            // generate a random mask:
-            $mask = [];
             for ($i = 0; $i < 4; $i++) {
-                $mask[$i] = chr(rand(0, self::MASK_255));
+                $mask[$i] = chr(mt_rand(0, self::MASK_255));
             }
 
             $frameHead = array_merge($frameHead, $mask);
