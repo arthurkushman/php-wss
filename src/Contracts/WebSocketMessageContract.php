@@ -1,6 +1,8 @@
 <?php
 
 namespace WSSC\Contracts;
+
+
 /**
  *
  * @author Arthur Kushman
@@ -10,7 +12,7 @@ interface WebSocketMessageContract extends WebSocketContract, MessageContract
 {
     /**
      * You may want to implement these methods to bring ping/pong events
-     * @param \WSSC\ConnectionContract $conn
+     * @param ConnectionContract $conn
      * @param type $msg
      */
 //    function onPing(IConnection $conn, $msg);

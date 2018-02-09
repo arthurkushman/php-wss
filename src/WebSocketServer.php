@@ -5,6 +5,7 @@ namespace WSSC;
 use WSSC\Contracts\CommonsContract;
 use WSSC\Contracts\WebSocketMessageContract;
 use WSSC\Contracts\WebSocketServerContract;
+use WSSC\Exceptions\WebSocketException;
 
 /**
  * Create by Arthur Kushman

@@ -4,6 +4,7 @@ namespace WSSC;
 
 use WSSC\Contracts\CommonsContract;
 use WSSC\Contracts\ConnectionContract;
+use WSSC\Contracts\WebSocketServerContract;
 
 class Connection implements ConnectionContract, CommonsContract
 {
@@ -81,7 +82,7 @@ class Connection implements ConnectionContract, CommonsContract
             }
             // most significant bit MUST be 0
             if ($frameHead[2] > self::MASK_127) {
-                return ['type' => $type, 'payload' => $payload, 'error' => self::ERR_FRAME_TOO_LARGE];
+                return ['type' => $type, 'payload' => $payload, 'error' => WebSocketServerContract::ERR_FRAME_TOO_LARGE];
             }
         } elseif ($payloadLength > self::MASK_125) {
             $payloadLengthBin = str_split(sprintf('%016b', $payloadLength), self::PAYLOAD_CHUNK);
