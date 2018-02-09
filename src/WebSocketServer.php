@@ -118,7 +118,9 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
 //                        $socketName = stream_socket_get_name($newClient, true);
                         // important to read from headers here coz later client will change and there will be only msgs on pipe
                         $headers = fread($newClient, self::HEADER_BYTES_READ);
-                        $this->setPathParams($headers);
+                        if (empty($this->handler->pathParams[0]) === false) {
+                            $this->setPathParams($headers);
+                        }
                         $this->clients[] = $newClient;
                         $this->stepRecursion = true; // set on new client coz of remainder % is always 0
                         // trigger OPEN event                      
@@ -340,7 +342,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
     private function setPathParams($headers)
     {
         /** @var WebSocketMessageContract $handler */
-        if (!empty($this->handler->pathParams)) {
+        if (empty($this->handler->pathParams) === false) {
             $matches = [];
             preg_match('/GET\s(.*?)\s/', $headers, $matches);
             $left = $matches[1];
