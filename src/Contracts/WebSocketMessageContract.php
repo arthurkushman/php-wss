@@ -22,7 +22,6 @@ interface WebSocketMessageContract extends WebSocketContract, MessageContract
     /**
      * @param ConnectionContract $conn
      * @param $msg
-     * @return mixed
      * @throws WebSocketException
      */
     public function onPong(ConnectionContract $conn, $msg);
