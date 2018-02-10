@@ -165,6 +165,9 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
     }
 
     /**
+     * @uses onMessage
+     * @uses onPing
+     * @uses onPong
      * @param array $readSocks
      */
     private function messagesWorker(array $readSocks) : void
@@ -187,29 +190,10 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
                 continue;
             }
 
-            if ($dataType === self::EVENT_TYPE_TEXT) {
-                // trigger MESSAGE event
+            if (method_exists($this->handler, self::MAP_EVENT_TYPE_TO_METHODS[$dataType])) {
                 try {
-                    echo 'trigger MESSAGE event';
-                    $this->handler->onMessage($this->cureentConn, $dataPayload);
-                } catch (WebSocketException $e) {
-                    $e->printStack();
-                }
-            }
-
-            if ($dataType === self::EVENT_TYPE_PING) {
-                // trigger PING event
-                try {
-                    $this->handler->onPing($this->cureentConn, $dataPayload);
-                } catch (WebSocketException $e) {
-                    $e->printStack();
-                }
-            }
-
-            if ($dataType === self::EVENT_TYPE_PONG) {
-                // trigger PONG event
-                try {
-                    $this->handler->onPong($this->cureentConn, $dataPayload);
+                    // dynamic call: onMessage, onPing, onPong
+                    $this->handler->{self::MAP_EVENT_TYPE_TO_METHODS[$dataType]}($this->cureentConn, $dataPayload);
                 } catch (WebSocketException $e) {
                     $e->printStack();
                 }

@@ -15,6 +15,13 @@ interface CommonsContract
     const EVENT_TYPE_TEXT = 'text';
     const EVENT_TYPE_CLOSE = 'close';
     const EVENT_TYPE_BINARY = 'binary';
+
+    const MAP_EVENT_TYPE_TO_METHODS = [
+        self::EVENT_TYPE_TEXT => 'onMessage',
+        self::EVENT_TYPE_PING => 'onPing',
+        self::EVENT_TYPE_PONG => 'onPong',
+    ];
+
     // DECODE FRAMES
     const DECODE_TEXT = 1;
     const DECODE_BINARY = 2;
