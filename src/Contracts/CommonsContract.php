@@ -15,6 +15,7 @@ interface CommonsContract
     const EVENT_TYPE_TEXT = 'text';
     const EVENT_TYPE_CLOSE = 'close';
     const EVENT_TYPE_BINARY = 'binary';
+    const EVENT_TYPE_CONTINUATION = 'continuation';
 
     const MAP_EVENT_TYPE_TO_METHODS = [
         self::EVENT_TYPE_TEXT => 'onMessage',

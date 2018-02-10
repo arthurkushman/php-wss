@@ -2,6 +2,7 @@
 
 namespace WSSC\Components;
 
+use WSSC\Contracts\CommonsContract;
 use WSSC\Contracts\WscCommonsContract;
 use WSSC\Exceptions\BadOpcodeException;
 use WSSC\Exceptions\BadUriException;
@@ -18,12 +19,12 @@ class WscMain implements WscCommonsContract
     private $hugePayload;
 
     private static $opcodes = [
-        'continuation' => 0,
-        'text'         => 1,
-        'binary'       => 2,
-        'close'        => 8,
-        'ping'         => 9,
-        'pong'         => 10,
+        CommonsContract::EVENT_TYPE_CONTINUATION => 0,
+        CommonsContract::EVENT_TYPE_TEXT         => 1,
+        CommonsContract::EVENT_TYPE_BINARY       => 2,
+        CommonsContract::EVENT_TYPE_CLOSE        => 8,
+        CommonsContract::EVENT_TYPE_PING         => 9,
+        CommonsContract::EVENT_TYPE_PONG         => 10,
     ];
 
     protected $socketUrl = '';
@@ -145,17 +146,26 @@ class WscMain implements WscCommonsContract
         $this->isConnected = true;
     }
 
-    public function getLastOpcode()
+    /**
+     * @return string
+     */
+    public function getLastOpcode() : string
     {
         return $this->lastOpcode;
     }
 
-    public function getCloseStatus()
+    /**
+     * @return int
+     */
+    public function getCloseStatus() : int
     {
         return $this->closeStatus;
     }
 
-    public function isConnected()
+    /**
+     * @return bool
+     */
+    public function isConnected() : bool
     {
         return $this->isConnected;
     }
@@ -173,9 +183,9 @@ class WscMain implements WscCommonsContract
         }
     }
 
-    public function setFragmentSize($fragment_size)
+    public function setFragmentSize($fragmentSize)
     {
-        $this->options['fragment_size'] = $fragment_size;
+        $this->options['fragment_size'] = $fragmentSize;
         return $this;
     }
 
@@ -287,7 +297,12 @@ class WscMain implements WscCommonsContract
         return $response;
     }
 
-    protected function receiveFragment()
+    /**
+     * @return string
+     * @throws BadOpcodeException
+     * @throws ConnectionException
+     */
+    protected function receiveFragment() : string
     {
         // Just read the main fragment information first.
         $data = $this->read(2);
@@ -296,10 +311,6 @@ class WscMain implements WscCommonsContract
         /// @todo Handle huge payloads with multiple fragments.
         $final = (bool)(ord($data[0]) & 1 << 7);
 
-        // Should be unused, and must be false…  // Bits 1, 2, & 3
-        //      $rsv1  = (boolean) (ord($data[0]) & 1 << 6);
-        //      $rsv2  = (boolean) (ord($data[0]) & 1 << 5);
-        //      $rsv3  = (boolean) (ord($data[0]) & 1 << 4);
         // Parse opcode
         $opcode_int = ord($data[0]) & 31; // Bits 4-7
         $opcode_ints = array_flip(self::$opcodes);
@@ -329,9 +340,10 @@ class WscMain implements WscCommonsContract
             $payload_length = bindec(self::sprintB($data));
         }
 
+        $maskingKey = '';
         // Get masking key.
         if ($mask) {
-            $masking_key = $this->read(4);
+            $maskingKey = $this->read(4);
         }
         // Get the actual payload, if any (might not be for e.g. close frames.
         if ($payload_length > 0) {
@@ -340,14 +352,14 @@ class WscMain implements WscCommonsContract
             if ($mask) {
                 // Unmask payload.
                 for ($i = 0; $i < $payload_length; $i++) {
-                    $payload .= ($data[$i] ^ $masking_key[$i % 4]);
+                    $payload .= ($data[$i] ^ $maskingKey[$i % 4]);
                 }
             } else {
                 $payload = $data;
             }
         }
 
-        if ($opcode === 'close') {
+        if ($opcode === CommonsContract::EVENT_TYPE_CLOSE) {
             // Get the close status.
             if ($payload_length >= 2) {
                 $status_bin = $payload[0] . $payload[1];
