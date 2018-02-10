@@ -44,44 +44,20 @@ class WscMain implements WscCommonsContract
         $user = isset($urlParts['user']) ? $urlParts['user'] : '';
         $pass = isset($urlParts['pass']) ? $urlParts['pass'] : '';
         $port = isset($urlParts['port']) ? $urlParts['port'] : ($scheme === 'wss' ? 443 : 80);
-        $path = isset($urlParts['path']) ? $urlParts['path'] : '/';
-        $query = isset($urlParts['query']) ? $urlParts['query'] : '';
-        $fragment = isset($urlParts['fragment']) ? $urlParts['fragment'] : '';
 
-        $path_with_query = $path;
-        if (!empty($query)) {
-            $path_with_query .= '?' . $query;
-        }
-        if (!empty($fragment)) {
-            $path_with_query .= '#' . $fragment;
-        }
-
-        if (!in_array($scheme, ['ws', 'wss'])) {
+        $pathWithQuery = $this->getPathWithQuery($urlParts);
+        if (in_array($scheme, ['ws', 'wss'], true) === false) {
             throw new BadUriException(
                 "Url should have scheme ws or wss, not '$scheme' from URI '$this->socketUrl' ."
             );
         }
 
-        $host_uri = ($scheme === 'wss' ? 'ssl' : 'tcp') . '://' . $host;
-
+        $hostUri = ($scheme === 'wss' ? 'ssl' : 'tcp') . '://' . $host;
         // Set the stream context options if they're already set in the config
-        if (isset($this->options['context'])) {
-            // Suppress the error since we'll catch it below
-            if (@get_resource_type($this->options['context']) === 'stream-context') {
-                $context = $this->options['context'];
-            } else {
-                throw new \InvalidArgumentException(
-                    "Stream context in \$options['context'] isn't a valid context"
-                );
-            }
-        } else {
-            $context = stream_context_create();
-        }
-
+        $context = $this->getStreamContext();
         $this->socket = @stream_socket_client(
-            $host_uri . ':' . $port, $errno, $errstr, $this->options['timeout'], STREAM_CLIENT_CONNECT, $context
+            $hostUri . ':' . $port, $errno, $errstr, $this->options['timeout'], STREAM_CLIENT_CONNECT, $context
         );
-
         if ($this->socket === false) {
             throw new ConnectionException(
                 "Could not open socket to \"$host:$port\": $errstr ($errno)."
@@ -93,7 +69,6 @@ class WscMain implements WscCommonsContract
 
         // Generate the WebSocket key.
         $key = $this->generateKey();
-
         $headers = [
             'Host'                  => $host . ':' . $port,
             'User-Agent'            => 'websocket-client-php',
@@ -107,21 +82,12 @@ class WscMain implements WscCommonsContract
         if ($user || $pass) {
             $headers['authorization'] = 'Basic ' . base64_encode($user . ':' . $pass) . "\r\n";
         }
-
         // Add and override with headers from options.
         if (isset($this->options['headers'])) {
             $headers = array_merge($headers, $this->options['headers']);
         }
 
-        $header = 'GET ' . $path_with_query . " HTTP/1.1\r\n"
-            . implode(
-                "\r\n", array_map(
-                    function ($key, $value) {
-                        return "$key: $value";
-                    }, array_keys($headers), $headers
-                )
-            )
-            . "\r\n\r\n";
+        $header = $this->getHeaders($pathWithQuery, $headers);
         // Send headers.
         $this->write($header);
         // Get server response header 
@@ -129,7 +95,7 @@ class WscMain implements WscCommonsContract
         /// @todo Handle version switching
         // Validate response.
         if (!preg_match(self::SEC_WEBSOCKET_ACCEPT_PTTRN, $response, $matches)) {
-            $address = $scheme . '://' . $host . $path_with_query;
+            $address = $scheme . '://' . $host . $pathWithQuery;
             throw new ConnectionException(
                 "Connection to '{$address}' failed: Server sent invalid upgrade response:\n"
                 . $response
@@ -138,12 +104,63 @@ class WscMain implements WscCommonsContract
 
         $keyAccept = trim($matches[1]);
         $expectedResonse = base64_encode(pack('H*', sha1($key . self::SERVER_KEY_ACCEPT)));
-
         if ($keyAccept !== $expectedResonse) {
             throw new ConnectionException('Server sent bad upgrade response.');
         }
-
         $this->isConnected = true;
+    }
+
+    /**
+     * @return mixed|resource
+     * @throws \InvalidArgumentException
+     */
+    private function getStreamContext()
+    {
+        if (isset($this->options['context'])) {
+            // Suppress the error since we'll catch it below
+            if (@get_resource_type($this->options['context']) === 'stream-context') {
+                return $this->options['context'];
+            }
+
+            throw new \InvalidArgumentException(
+                "Stream context in \$options['context'] isn't a valid context"
+            );
+        }
+
+        return stream_context_create();
+    }
+
+    private function getPathWithQuery(array $urlParts) : string
+    {
+        $path = isset($urlParts['path']) ? $urlParts['path'] : '/';
+        $query = isset($urlParts['query']) ? $urlParts['query'] : '';
+        $fragment = isset($urlParts['fragment']) ? $urlParts['fragment'] : '';
+        $pathWithQuery = $path;
+        if (!empty($query)) {
+            $pathWithQuery .= '?' . $query;
+        }
+        if (!empty($fragment)) {
+            $pathWithQuery .= '#' . $fragment;
+        }
+        return $pathWithQuery;
+    }
+
+    /**
+     * @param string $pathWithQuery
+     * @param array $headers
+     * @return string
+     */
+    private function getHeaders(string $pathWithQuery, array $headers) : string
+    {
+        return 'GET ' . $pathWithQuery . " HTTP/1.1\r\n"
+            . implode(
+                "\r\n", array_map(
+                    function ($key, $value) {
+                        return "$key: $value";
+                    }, array_keys($headers), $headers
+                )
+            )
+            . "\r\n\r\n";
     }
 
     /**
