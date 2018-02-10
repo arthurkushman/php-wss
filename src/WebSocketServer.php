@@ -130,71 +130,88 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
             }
 
             //new client
-            if (in_array($server, $readSocks)) {
-                $newClient = stream_socket_accept($server, 0); // must be 0 to non-block
-                if ($newClient) {
-                    // print remote client information, ip and port number
-                    //                        $socketName = stream_socket_get_name($newClient, true);
-                    // important to read from headers here coz later client will change and there will be only msgs on pipe
-                    $headers = fread($newClient, self::HEADER_BYTES_READ);
-                    if (empty($this->handler->pathParams[0]) === false) {
-                        $this->setPathParams($headers);
-                    }
-                    $this->clients[] = $newClient;
-                    $this->stepRecursion = true; // set on new client coz of remainder % is always 0
-                    // trigger OPEN event
-                    $this->handler->onOpen($this->connImpl->getConnection($newClient));
-                    $this->handshake($newClient, $headers);
-                }
-                //delete the server socket from the read sockets
-                unset($readSocks[array_search($server, $readSocks)]);
+            if (in_array($server, $readSocks, false)) {
+                $this->acceptNewClient($server, $readSocks);
             }
 
             //message from existing client
-            foreach ($readSocks as $kSock => $sock) {
-                $data = $this->decode(fread($sock, self::MAX_BYTES_READ));
-                $dataType = $data['type'];
-                $dataPayload = $data['payload'];
-                // to manipulate connection through send/close methods via handler, specified in IConnection
-                $this->cureentConn = $this->connImpl->getConnection($sock);
-                if (empty($data) || $dataType === self::EVENT_TYPE_CLOSE) { // close event triggered from client - browser tab or close socket event
-                    // trigger CLOSE event
-                    try {
-                        $this->handler->onClose($this->cureentConn);
-                    } catch (WebSocketException $e) {
-                        $e->printStack();
-                    }
-                    // to avoid event leaks
-                    unset($this->clients[array_search($sock, $this->clients)], $readSocks[$kSock]);
-                    continue;
-                }
+            $this->messagesWorker($readSocks);
+        }
+    }
 
-                if ($dataType === self::EVENT_TYPE_TEXT) {
-                    // trigger MESSAGE event
-                    try {
-                        echo 'trigger MESSAGE event';
-                        $this->handler->onMessage($this->cureentConn, $dataPayload);
-                    } catch (WebSocketException $e) {
-                        $e->printStack();
-                    }
-                }
+    /**
+     * @param resource $server
+     * @param array $readSocks
+     */
+    private function acceptNewClient($server, array &$readSocks) : void
+    {
+        $newClient = stream_socket_accept($server, 0); // must be 0 to non-block
+        if ($newClient) {
+            // print remote client information, ip and port number
+//            $socketName = stream_socket_get_name($newClient, true);
+            // important to read from headers here coz later client will change and there will be only msgs on pipe
+            $headers = fread($newClient, self::HEADER_BYTES_READ);
+            if (empty($this->handler->pathParams[0]) === false) {
+                $this->setPathParams($headers);
+            }
+            $this->clients[] = $newClient;
+            $this->stepRecursion = true; // set on new client coz of remainder % is always 0
+            // trigger OPEN event
+            $this->handler->onOpen($this->connImpl->getConnection($newClient));
+            $this->handshake($newClient, $headers);
+        }
+        //delete the server socket from the read sockets
+        unset($readSocks[array_search($server, $readSocks, false)]);
+    }
 
-                if ($dataType === self::EVENT_TYPE_PING) {
-                    // trigger PING event
-                    try {
-                        $this->handler->onPing($this->cureentConn, $dataPayload);
-                    } catch (WebSocketException $e) {
-                        $e->printStack();
-                    }
+    /**
+     * @param array $readSocks
+     */
+    private function messagesWorker(array $readSocks) : void
+    {
+        foreach ($readSocks as $kSock => $sock) {
+            $data = $this->decode(fread($sock, self::MAX_BYTES_READ));
+            $dataType = $data['type'];
+            $dataPayload = $data['payload'];
+            // to manipulate connection through send/close methods via handler, specified in IConnection
+            $this->cureentConn = $this->connImpl->getConnection($sock);
+            if (empty($data) || $dataType === self::EVENT_TYPE_CLOSE) { // close event triggered from client - browser tab or close socket event
+                // trigger CLOSE event
+                try {
+                    $this->handler->onClose($this->cureentConn);
+                } catch (WebSocketException $e) {
+                    $e->printStack();
                 }
+                // to avoid event leaks
+                unset($this->clients[array_search($sock, $this->clients)], $readSocks[$kSock]);
+                continue;
+            }
 
-                if ($dataType === self::EVENT_TYPE_PONG) {
-                    // trigger PONG event
-                    try {
-                        $this->handler->onPong($this->cureentConn, $dataPayload);
-                    } catch (WebSocketException $e) {
-                        $e->printStack();
-                    }
+            if ($dataType === self::EVENT_TYPE_TEXT) {
+                // trigger MESSAGE event
+                try {
+                    echo 'trigger MESSAGE event';
+                    $this->handler->onMessage($this->cureentConn, $dataPayload);
+                } catch (WebSocketException $e) {
+                    $e->printStack();
+                }
+            }
+
+            if ($dataType === self::EVENT_TYPE_PING) {
+                // trigger PING event
+                try {
+                    $this->handler->onPing($this->cureentConn, $dataPayload);
+                } catch (WebSocketException $e) {
+                    $e->printStack();
+                }
+            }
+
+            if ($dataType === self::EVENT_TYPE_PONG) {
+                // trigger PONG event
+                try {
+                    $this->handler->onPong($this->cureentConn, $dataPayload);
+                } catch (WebSocketException $e) {
+                    $e->printStack();
                 }
             }
         }
@@ -206,7 +223,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      * @param string $data
      * @return mixed null on empty data|false on improper data|array - on success
      */
-    private function decode($data)
+    private function decode(string $data)
     {
         if (empty($data)) {
             return NULL; // close has been sent
@@ -305,7 +322,6 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
     private function handshake($client, string $headers) : string
     {
         $match = [];
-        $key = empty($this->handshakes[(int)$client]) ? 0 : $this->handshakes[(int)$client];
         preg_match(self::SEC_WEBSOCKET_KEY_PTRN, $headers, $match);
         if (empty($match[1])) {
             return false;
@@ -313,7 +329,6 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
 
         $key = $match[1];
         $this->handshakes[(int)$client] = $key;
-
         // sending header according to WebSocket Protocol
         $secWebSocketAccept = base64_encode(sha1(trim($key) . self::HEADER_WEBSOCKET_ACCEPT_HASH, true));
         $this->setHeadersUpgrade($secWebSocketAccept);
@@ -328,7 +343,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      *
      * @param string $secWebSocketAccept base64 encoded Sec-WebSocket-Accept header
      */
-    private function setHeadersUpgrade($secWebSocketAccept)
+    private function setHeadersUpgrade($secWebSocketAccept) : void
     {
         $this->headersUpgrade = [
             self::HEADERS_UPGRADE_KEY              => self::HEADERS_UPGRADE_VALUE,
