@@ -30,10 +30,12 @@ class WscMain implements WscCommonsContract
     protected $options = [];
 
     /**
+     * @throws \InvalidArgumentException
      * @throws BadUriException
      * @throws ConnectionException
+     * @throws \Exception
      */
-    protected function connect(): void
+    protected function connect() : void
     {
         $urlParts = parse_url($this->socketUrl);
         $scheme = $urlParts['scheme'];
@@ -158,12 +160,16 @@ class WscMain implements WscCommonsContract
         return $this->isConnected;
     }
 
-    public function setTimeout($timeout)
+    /**
+     * @param int $timeout
+     * @param null $microSecs
+     */
+    public function setTimeout(int $timeout, $microSecs = null)
     {
         $this->options['timeout'] = $timeout;
 
         if ($this->socket && get_resource_type($this->socket) === 'stream') {
-            stream_set_timeout($this->socket, $timeout);
+            stream_set_timeout($this->socket, $timeout, $microSecs);
         }
     }
 
@@ -210,6 +216,14 @@ class WscMain implements WscCommonsContract
         }
     }
 
+    /**
+     * @param $final
+     * @param $payload
+     * @param $opcode
+     * @param $masked
+     * @throws ConnectionException
+     * @throws \Exception
+     */
     protected function sendFragment($final, $payload, $opcode, $masked)
     {
         // Binary string for header.
@@ -280,7 +294,7 @@ class WscMain implements WscCommonsContract
 
         // Is this the final fragment?  // Bit 0 in byte 0
         /// @todo Handle huge payloads with multiple fragments.
-        $final = (boolean)(ord($data[0]) & 1 << 7);
+        $final = (bool)(ord($data[0]) & 1 << 7);
 
         // Should be unused, and must be false…  // Bits 1, 2, & 3
         //      $rsv1  = (boolean) (ord($data[0]) & 1 << 6);
@@ -300,12 +314,12 @@ class WscMain implements WscCommonsContract
         }
 
         // Masking?
-        $mask = (boolean)(ord($data[1]) >> 7);  // Bit 0 in byte 1
+        $mask = (bool)(ord($data[1]) >> 7);  // Bit 0 in byte 1
 
         $payload = '';
 
         // Payload length
-        $payload_length = (integer)ord($data[1]) & self::MASK_127; // Bits 1-7 in byte 1
+        $payload_length = (int)ord($data[1]) & self::MASK_127; // Bits 1-7 in byte 1
         if ($payload_length > self::MASK_125) {
             if ($payload_length === self::MASK_126) {
                 $data = $this->read(2); // 126: Payload is a 16-bit unsigned int
@@ -373,6 +387,7 @@ class WscMain implements WscCommonsContract
      * @param integer $status http://tools.ietf.org/html/rfc6455#section-7.4
      * @param string $message A closing message, max 125 bytes.
      * @return bool|null|string
+     * @throws BadOpcodeException
      */
     public function close(int $status = 1000, string $message = 'ttfn')
     {
@@ -390,7 +405,7 @@ class WscMain implements WscCommonsContract
      * @param $data
      * @throws ConnectionException
      */
-    protected function write(string $data): void
+    protected function write(string $data) : void
     {
         $written = fwrite($this->socket, $data);
 
@@ -406,7 +421,7 @@ class WscMain implements WscCommonsContract
      * @return string
      * @throws ConnectionException
      */
-    protected function read(int $len): string
+    protected function read(int $len) : string
     {
         $data = '';
         while (($dataLen = strlen($data)) < $len) {
@@ -436,7 +451,7 @@ class WscMain implements WscCommonsContract
      * @param $string
      * @return string
      */
-    protected static function sprintB(string $string): string
+    protected static function sprintB(string $string) : string
     {
         $return = '';
         $strLen = strlen($string);
@@ -450,8 +465,9 @@ class WscMain implements WscCommonsContract
      * Sec-WebSocket-Key generator
      *
      * @return string   the 16 character length key
+     * @throws \Exception
      */
-    private function generateKey(): string
+    private function generateKey() : string
     {
         $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"$&/()=[]{}0123456789';
         $key = '';

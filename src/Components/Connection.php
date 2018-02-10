@@ -36,6 +36,7 @@ class Connection implements ConnectionContract, CommonsContract
      * writes data to the clients stream socket
      *
      * @param string $data pure decoded data from server
+     * @throws \Exception
      */
     public function send($data): void
     {
@@ -49,6 +50,7 @@ class Connection implements ConnectionContract, CommonsContract
      * @param string $type
      * @param boolean $masked
      * @return mixed
+     * @throws \Exception
      */
     private function encode($payload, string $type = self::EVENT_TYPE_TEXT, bool $masked = false)
     {

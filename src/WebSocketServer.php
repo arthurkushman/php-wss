@@ -28,23 +28,29 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
     // for the very 1st time must be true
     private $stepRecursion = true;
 
-    const MAX_BYTES_READ = 8192,
-        HEADER_BYTES_READ = 1024;
+    const MAX_BYTES_READ = 8192;
+    const HEADER_BYTES_READ = 1024;
     // must be the time for interaction between each client
     const STREAM_SELECT_TIMEOUT = 3600;
     // stream non-blocking 
     const NON_BLOCK = 0;
     // max clients to fork another process
     const MAX_CLIENTS_REMAINDER_FORK = 1000;
-    const PROC_TITLE                 = 'php-wss';
+    const PROC_TITLE = 'php-wss';
 
+    /**
+     * WebSocketServer constructor.
+     * @param WebSocketMessageContract $handler
+     * @param array $config
+     */
     public function __construct(
         WebSocketMessageContract $handler,
         $config = [
             'host' => self::DEFAULT_HOST,
             'port' => self::DEFAULT_PORT,
         ]
-    ) {
+    )
+    {
         ini_set('default_socket_timeout', 5); // this should be >= 5 sec, otherwise there will be broken pipe - tested
         $this->handler = $handler;
         $this->config = $config;
@@ -72,9 +78,9 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      * and when forks equals true which prevents it from infinite recursive iterations
      *
      * @param resource $server server connection
-     * @param bool $fork       flag to fork or run event loop
+     * @param bool $fork flag to fork or run event loop
      */
-    private function eventLoop($server, $fork = false)
+    private function eventLoop($server, bool $fork = false)
     {
         if ($fork === true) {
             $pid = pcntl_fork();
@@ -84,102 +90,110 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
                 $this->eventLoop($server);
             }
         } else {
-            while (true) {
-                $this->totalClients = count($this->clients) + 1;
+            $this->looping($server);
+        }
+    }
 
-                // maxClients prevents process fork on count down
-                if ($this->totalClients > $this->maxClients) {
-                    $this->maxClients = $this->totalClients;
-                }
+    /**
+     * @param resource $server
+     */
+    private function looping($server)
+    {
+        while (true) {
+            $this->totalClients = count($this->clients) + 1;
 
-                if ($this->totalClients !== 0 // avoid 0 process creation
-                    && $this->totalClients % self::MAX_CLIENTS_REMAINDER_FORK === 0 // only when N is there
-                    && true === $this->stepRecursion // only once
-                    && $this->maxClients === $this->totalClients // only if stack grows
-                ) {
-                    $this->stepRecursion = false;
-                    $this->eventLoop($server, true);
-                }
+            // maxClients prevents process fork on count down
+            if ($this->totalClients > $this->maxClients) {
+                $this->maxClients = $this->totalClients;
+            }
 
-                if ($this->totalClients !== 0 && $this->totalClients % self::MAX_CLIENTS_REMAINDER_FORK === 0 && $this->maxClients > $this->totalClients) { // there is less connection for amount of processes at this moment
-                    exit(1);
-                }
+            if ($this->totalClients !== 0 // avoid 0 process creation
+                && $this->totalClients % self::MAX_CLIENTS_REMAINDER_FORK === 0 // only when N is there
+                && true === $this->stepRecursion // only once
+                && $this->maxClients === $this->totalClients // only if stack grows
+            ) {
+                $this->stepRecursion = false;
+                $this->eventLoop($server, true);
+            }
 
-                //prepare readable sockets
-                $readSocks = $this->clients;
-                $readSocks[] = $server;
+            if ($this->totalClients !== 0 && $this->totalClients % self::MAX_CLIENTS_REMAINDER_FORK === 0 && $this->maxClients > $this->totalClients) { // there is less connection for amount of processes at this moment
+                exit(1);
+            }
 
-                //start reading and use a large timeout
-                if (!stream_select($readSocks, $write, $except, self::STREAM_SELECT_TIMEOUT)) {
-                    die('something went wrong while selecting');
-                }
+            //prepare readable sockets
+            $readSocks = $this->clients;
+            $readSocks[] = $server;
 
-                //new client
-                if (in_array($server, $readSocks)) {
-                    $newClient = stream_socket_accept($server, 0); // must be 0 to non-block          
-                    if ($newClient) {
-                        // print remote client information, ip and port number
-                        //                        $socketName = stream_socket_get_name($newClient, true);
-                        // important to read from headers here coz later client will change and there will be only msgs on pipe
-                        $headers = fread($newClient, self::HEADER_BYTES_READ);
-                        if (empty($this->handler->pathParams[0]) === false) {
-                            $this->setPathParams($headers);
-                        }
-                        $this->clients[] = $newClient;
-                        $this->stepRecursion = true; // set on new client coz of remainder % is always 0
-                        // trigger OPEN event                      
-                        $this->handler->onOpen($this->connImpl->getConnection($newClient));
-                        $this->handshake($newClient, $headers);
+            //start reading and use a large timeout
+            if (!stream_select($readSocks, $write, $except, self::STREAM_SELECT_TIMEOUT)) {
+                die('something went wrong while selecting');
+            }
+
+            //new client
+            if (in_array($server, $readSocks)) {
+                $newClient = stream_socket_accept($server, 0); // must be 0 to non-block
+                if ($newClient) {
+                    // print remote client information, ip and port number
+                    //                        $socketName = stream_socket_get_name($newClient, true);
+                    // important to read from headers here coz later client will change and there will be only msgs on pipe
+                    $headers = fread($newClient, self::HEADER_BYTES_READ);
+                    if (empty($this->handler->pathParams[0]) === false) {
+                        $this->setPathParams($headers);
                     }
-                    //delete the server socket from the read sockets
-                    unset($readSocks[array_search($server, $readSocks)]);
+                    $this->clients[] = $newClient;
+                    $this->stepRecursion = true; // set on new client coz of remainder % is always 0
+                    // trigger OPEN event
+                    $this->handler->onOpen($this->connImpl->getConnection($newClient));
+                    $this->handshake($newClient, $headers);
+                }
+                //delete the server socket from the read sockets
+                unset($readSocks[array_search($server, $readSocks)]);
+            }
+
+            //message from existing client
+            foreach ($readSocks as $kSock => $sock) {
+                $data = $this->decode(fread($sock, self::MAX_BYTES_READ));
+                $dataType = $data['type'];
+                $dataPayload = $data['payload'];
+                // to manipulate connection through send/close methods via handler, specified in IConnection
+                $this->cureentConn = $this->connImpl->getConnection($sock);
+                if (empty($data) || $dataType === self::EVENT_TYPE_CLOSE) { // close event triggered from client - browser tab or close socket event
+                    // trigger CLOSE event
+                    try {
+                        $this->handler->onClose($this->cureentConn);
+                    } catch (WebSocketException $e) {
+                        $e->printStack();
+                    }
+                    // to avoid event leaks
+                    unset($this->clients[array_search($sock, $this->clients)], $readSocks[$kSock]);
+                    continue;
                 }
 
-                //message from existing client
-                foreach ($readSocks as $kSock => $sock) {
-                    $data = $this->decode(fread($sock, self::MAX_BYTES_READ));
-                    $dataType = $data['type'];
-                    $dataPayload = $data['payload'];
-                    // to manipulate connection through send/close methods via handler, specified in IConnection
-                    $this->cureentConn = $this->connImpl->getConnection($sock);
-                    if (empty($data) || $dataType === self::EVENT_TYPE_CLOSE) { // close event triggered from client - browser tab or close socket event
-                        // trigger CLOSE event
-                        try {
-                            $this->handler->onClose($this->cureentConn);
-                        } catch (WebSocketException $e) {
-                            $e->printStack();
-                        }
-                        // to avoid event leaks
-                        unset($this->clients[array_search($sock, $this->clients)], $readSocks[$kSock]);
-                        continue;
+                if ($dataType === self::EVENT_TYPE_TEXT) {
+                    // trigger MESSAGE event
+                    try {
+                        echo 'trigger MESSAGE event';
+                        $this->handler->onMessage($this->cureentConn, $dataPayload);
+                    } catch (WebSocketException $e) {
+                        $e->printStack();
                     }
+                }
 
-                    if ($dataType === self::EVENT_TYPE_TEXT) {
-                        // trigger MESSAGE event
-                        try {
-                            echo 'trigger MESSAGE event';
-                            $this->handler->onMessage($this->cureentConn, $dataPayload);
-                        } catch (WebSocketException $e) {
-                            $e->printStack();
-                        }
+                if ($dataType === self::EVENT_TYPE_PING) {
+                    // trigger PING event
+                    try {
+                        $this->handler->onPing($this->cureentConn, $dataPayload);
+                    } catch (WebSocketException $e) {
+                        $e->printStack();
                     }
+                }
 
-                    if ($dataType === self::EVENT_TYPE_PING) {
-                        // trigger PING event
-                        try {
-                            $this->handler->onPing($this->cureentConn, $dataPayload);
-                        } catch (WebSocketException $e) {
-                            $e->printStack();
-                        }
-                    }
-
-                    if ($dataType === self::EVENT_TYPE_PONG) {
-                        // trigger PONG event
-                        try {
-                            $this->handler->onPong($this->cureentConn, $dataPayload);
-                        } catch (WebSocketException $e) {
-                            $e->printStack();
-                        }
+                if ($dataType === self::EVENT_TYPE_PONG) {
+                    // trigger PONG event
+                    try {
+                        $this->handler->onPong($this->cureentConn, $dataPayload);
+                    } catch (WebSocketException $e) {
+                        $e->printStack();
                     }
                 }
             }
@@ -285,10 +299,10 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      * Handshakes/upgrade and key parse
      *
      * @param resource $client Source client socket to write
-     * @param string $headers  Headers that client has been sent
+     * @param string $headers Headers that client has been sent
      * @return string   socket handshake key (Sec-WebSocket-Key)| false on parse error
      */
-    private function handshake($client, string $headers): string
+    private function handshake($client, string $headers) : string
     {
         $match = [];
         $key = empty($this->handshakes[(int)$client]) ? 0 : $this->handshakes[(int)$client];
@@ -328,7 +342,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      *
      * @return string   Headers to Upgrade communication connection
      */
-    private function getHeadersUpgrade(): string
+    private function getHeadersUpgrade() : string
     {
         $handShakeHeaders = self::HEADER_HTTP1_1 . self::HEADERS_EOL;
         if (empty($this->headersUpgrade)) {
@@ -348,7 +362,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      *
      * @param string $headers
      */
-    private function setPathParams(string $headers): void
+    private function setPathParams(string $headers) : void
     {
         /** @var WebSocketMessageContract $handler */
         if (empty($this->handler->pathParams) === false) {

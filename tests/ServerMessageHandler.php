@@ -46,4 +46,23 @@ class ServerMessageHandler implements WebSocketMessageContract
         echo 'Error occured: ' . $ex->printStack();
     }
 
+    /**
+     * You may want to implement these methods to bring ping/pong events
+     * @param ConnectionContract $conn
+     * @param string $msg
+     */
+    public function onPing(ConnectionContract $conn, $msg)
+    {
+        // TODO: Implement onPing() method.
+    }
+
+    /**
+     * @param ConnectionContract $conn
+     * @param $msg
+     * @return mixed
+     */
+    public function onPong(ConnectionContract $conn, $msg)
+    {
+        // TODO: Implement onPong() method.
+    }
 }

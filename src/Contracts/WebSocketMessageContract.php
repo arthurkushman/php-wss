@@ -1,6 +1,7 @@
 <?php
 
 namespace WSSC\Contracts;
+use WSSC\Exceptions\WebSocketException;
 
 
 /**
@@ -13,8 +14,16 @@ interface WebSocketMessageContract extends WebSocketContract, MessageContract
     /**
      * You may want to implement these methods to bring ping/pong events
      * @param ConnectionContract $conn
-     * @param type $msg
+     * @param string $msg
+     * @throws WebSocketException
      */
-//    function onPing(IConnection $conn, $msg);
-//    function onPong(IConnection $conn, $msg);
+    public function onPing(ConnectionContract $conn, $msg);
+
+    /**
+     * @param ConnectionContract $conn
+     * @param $msg
+     * @return mixed
+     * @throws WebSocketException
+     */
+    public function onPong(ConnectionContract $conn, $msg);
 }
