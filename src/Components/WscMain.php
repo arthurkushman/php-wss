@@ -130,7 +130,11 @@ class WscMain implements WscCommonsContract
         return stream_context_create();
     }
 
-    private function getPathWithQuery(array $urlParts) : string
+    /**
+     * @param mixed $urlParts
+     * @return string
+     */
+    private function getPathWithQuery($urlParts) : string
     {
         $path = isset($urlParts['path']) ? $urlParts['path'] : '/';
         $query = isset($urlParts['query']) ? $urlParts['query'] : '';

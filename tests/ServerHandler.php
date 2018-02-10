@@ -3,10 +3,10 @@
 namespace WSSCTEST;
 
 use WSSC\Contracts\ConnectionContract;
-use WSSC\Contracts\WebSocketMessageContract;
+use WSSC\Contracts\WebSocket;
 use WSSC\Exceptions\WebSocketException;
 
-class ServerMessageHandler implements WebSocketMessageContract
+class ServerHandler extends WebSocket
 {
 
     /*

@@ -4,7 +4,7 @@ namespace WSSC;
 
 use WSSC\Components\Connection;
 use WSSC\Contracts\CommonsContract;
-use WSSC\Contracts\WebSocketMessageContract;
+use WSSC\Contracts\WebSocket;
 use WSSC\Contracts\WebSocketServerContract;
 use WSSC\Exceptions\WebSocketException;
 
@@ -40,11 +40,11 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
 
     /**
      * WebSocketServer constructor.
-     * @param WebSocketMessageContract $handler
+     * @param WebSocket $handler
      * @param array $config
      */
     public function __construct(
-        WebSocketMessageContract $handler,
+        WebSocket $handler,
         $config = [
             'host' => self::DEFAULT_HOST,
             'port' => self::DEFAULT_PORT,
@@ -363,7 +363,6 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      */
     private function setPathParams(string $headers) : void
     {
-        /** @var WebSocketMessageContract $handler */
         if (empty($this->handler->pathParams) === false) {
             $matches = [];
             preg_match('/GET\s(.*?)\s/', $headers, $matches);
@@ -382,5 +381,4 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
             }
         }
     }
-
 }
