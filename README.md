@@ -19,7 +19,7 @@ Just add
 
 ```javascript
 "require": {
-  "arthurkushman/wssc": ">=1.3"  
+  "arthurkushman/wss": ">=1.3"  
 }
 ```
 
@@ -30,7 +30,7 @@ OR
 perform command in shell
 
 ```bash
-$ composer require arthurkushman/wssc
+$ composer require arthurkushman/wss
 ```
 
 ### Implement Your WebSocket handler class - ex.:
@@ -38,10 +38,10 @@ $ composer require arthurkushman/wssc
 ```php
 <?php
 use WSSC\Contracts\ConnectionContract;
-use WSSC\Contracts\WebSocketMessageContract;
+use WSSC\Contracts\WebSocket;
 use WSSC\Exceptions\WebSocketException;
 
-class ServerMessageHandler implements WebSocketMessageContract
+class ServerHandler extends WebSocket
 {
 
     /*
@@ -107,7 +107,7 @@ class ServerMessageHandler implements WebSocketMessageContract
 ### Then put code bellow to Your CLI/Console script and run 
 
 ```php
-$websocketServer = new WebSocketServer(new ServerMessageHandler(), [
+$websocketServer = new WebSocketServer(new ServerHandler(), [
     'host' => '0.0.0.0',
     'port' => 8000
         ]);
@@ -119,7 +119,7 @@ $websocketServer->run();
 ```php
 use WSSC\WebSocketClient;
 
-$client = new WebSocketClient('ws://localhost:8000/notifications/messanger/vkjsndfvjn23243');
+$client = new WebSocketClient('ws://localhost:8000/notifications/messanger/yourtoken123');
 $client->send('{"user_id" : 123}');
 echo $client->receive();
 ```
@@ -139,6 +139,8 @@ To run the Client - execute in another console:
 ```php
 phpunit --bootstrap ./tests/_bootstrap.php ./tests/WebSocketClientTest.php
 ```
+
+PHP7 support since version 1.3 - with types, returns and better function implementations. 
 
 PS U'll see the processes increase named "php-wssc" as CPP (Connections Per-Process) will grow and decrease while stack will lessen. 
 For instance, if set 100 CPP and there are 128 connections - You will be able to see 2 "php-wssc" processes with for ex.: `ps aux | grep php-wssc`
