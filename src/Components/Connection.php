@@ -15,7 +15,7 @@ class Connection implements ConnectionContract, CommonsContract
      * @param $sockConn
      * @return $this
      */
-    public function getConnection($sockConn): self
+    public function getConnection($sockConn) : self
     {
         $this->socketConnection = $sockConn;
         return $this;
@@ -24,7 +24,7 @@ class Connection implements ConnectionContract, CommonsContract
     /**
      * Closes clients socket stream
      */
-    public function close(): void
+    public function close() : void
     {
         if (is_resource($this->socketConnection)) {
             fclose($this->socketConnection);
@@ -38,7 +38,7 @@ class Connection implements ConnectionContract, CommonsContract
      * @param string $data pure decoded data from server
      * @throws \Exception
      */
-    public function send($data): void
+    public function send($data) : void
     {
         fwrite($this->socketConnection, $this->encode($data));
     }
@@ -99,6 +99,11 @@ class Connection implements ConnectionContract, CommonsContract
             $frameHead[1] = ($masked === true) ? $payloadLength + self::MASK_128 : $payloadLength;
         }
 
+        return $this->getComposedFrame($frameHead, $payload, $payloadLength, $masked);
+    }
+
+    private function getComposedFrame(array $frameHead, string $payload, int $payloadLength, bool $masked)
+    {
         // convert frame-head to string:
         foreach (array_keys($frameHead) as $i) {
             $frameHead[$i] = chr($frameHead[$i]);

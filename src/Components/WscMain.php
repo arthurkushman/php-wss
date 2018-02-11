@@ -341,11 +341,11 @@ class WscMain implements WscCommonsContract
     }
 
     /**
-     * @return string
+     * @return null|string
      * @throws BadOpcodeException
      * @throws ConnectionException
      */
-    protected function receiveFragment() : string
+    protected function receiveFragment()
     {
         // Just read the main fragment information first.
         $data = $this->read(2);
