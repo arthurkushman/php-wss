@@ -345,51 +345,18 @@ class WscMain implements WscCommonsContract
             $this->lastOpcode = $opcode;
         }
 
-        // Masking?
-        $mask = (bool)(ord($data[1]) >> 7);  // Bit 0 in byte 1
-
-        $payload = '';
-
-        // Payload length
-        $payload_length = (int)ord($data[1]) & self::MASK_127; // Bits 1-7 in byte 1
-        if ($payload_length > self::MASK_125) {
-            if ($payload_length === self::MASK_126) {
-                $data = $this->read(2); // 126: Payload is a 16-bit unsigned int
-            } else {
-                $data = $this->read(8); // 127: Payload is a 64-bit unsigned int
-            }
-            $payload_length = bindec(self::sprintB($data));
-        }
-
-        $maskingKey = '';
-        // Get masking key.
-        if ($mask) {
-            $maskingKey = $this->read(4);
-        }
-        // Get the actual payload, if any (might not be for e.g. close frames.
-        if ($payload_length > 0) {
-            $data = $this->read($payload_length);
-
-            if ($mask) {
-                // Unmask payload.
-                for ($i = 0; $i < $payload_length; $i++) {
-                    $payload .= ($data[$i] ^ $maskingKey[$i % 4]);
-                }
-            } else {
-                $payload = $data;
-            }
-        }
-
+        $payloadLength = $this->getPayloadLength($data);
+        $payload = $this->getPayloadData($data, $payloadLength);
         if ($opcode === CommonsContract::EVENT_TYPE_CLOSE) {
             // Get the close status.
-            if ($payload_length >= 2) {
-                $status_bin = $payload[0] . $payload[1];
+            if ($payloadLength >= 2) {
+                $statusBin = $payload[0] . $payload[1];
                 $status = bindec(sprintf('%08b%08b', ord($payload[0]), ord($payload[1])));
                 $this->closeStatus = $status;
                 $payload = substr($payload, 2);
 
                 if (!$this->isClosing) {
-                    $this->send($status_bin . 'Close acknowledged: ' . $status, 'close'); // Respond.
+                    $this->send($statusBin . 'Close acknowledged: ' . $status, 'close'); // Respond.
                 }
             }
 
@@ -412,6 +379,57 @@ class WscMain implements WscCommonsContract
         }
 
         return $payload;
+    }
+
+    /**
+     * @param string $data
+     * @param int $payloadLength
+     * @return string
+     * @throws ConnectionException
+     */
+    private function getPayloadData(string $data, int $payloadLength)
+    {
+        // Masking?
+        $mask = (bool)(ord($data[1]) >> 7);  // Bit 0 in byte 1
+        $payload = '';
+        $maskingKey = '';
+        // Get masking key.
+        if ($mask) {
+            $maskingKey = $this->read(4);
+        }
+        // Get the actual payload, if any (might not be for e.g. close frames.
+        if ($payloadLength > 0) {
+            $data = $this->read($payloadLength);
+
+            if ($mask) {
+                // Unmask payload.
+                for ($i = 0; $i < $payloadLength; $i++) {
+                    $payload .= ($data[$i] ^ $maskingKey[$i % 4]);
+                }
+            } else {
+                $payload = $data;
+            }
+        }
+        return $payload;
+    }
+
+    /**
+     * @param string $data
+     * @return float|int
+     * @throws ConnectionException
+     */
+    private function getPayloadLength(string $data)
+    {
+        $payloadLength = (int)ord($data[1]) & self::MASK_127; // Bits 1-7 in byte 1
+        if ($payloadLength > self::MASK_125) {
+            if ($payloadLength === self::MASK_126) {
+                $data = $this->read(2); // 126: Payload is a 16-bit unsigned int
+            } else {
+                $data = $this->read(8); // 127: Payload is a 64-bit unsigned int
+            }
+            $payloadLength = bindec(self::sprintB($data));
+        }
+        return $payloadLength;
     }
 
     /**
