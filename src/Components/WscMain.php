@@ -46,13 +46,7 @@ class WscMain implements WscCommonsContract
         $port = isset($urlParts['port']) ? $urlParts['port'] : ($scheme === 'wss' ? 443 : 80);
 
         $pathWithQuery = $this->getPathWithQuery($urlParts);
-        if (in_array($scheme, ['ws', 'wss'], true) === false) {
-            throw new BadUriException(
-                "Url should have scheme ws or wss, not '$scheme' from URI '$this->socketUrl' ."
-            );
-        }
-
-        $hostUri = ($scheme === 'wss' ? 'ssl' : 'tcp') . '://' . $host;
+        $hostUri = $this->getHostUri($scheme, $host);
         // Set the stream context options if they're already set in the config
         $context = $this->getStreamContext();
         $this->socket = @stream_socket_client(
@@ -90,10 +84,39 @@ class WscMain implements WscCommonsContract
         $header = $this->getHeaders($pathWithQuery, $headers);
         // Send headers.
         $this->write($header);
-        // Get server response header 
+        // Get server response header
+        // @todo Handle version switching
+        $this->validateResponse($scheme, $host, $pathWithQuery, $key);
+        $this->isConnected = true;
+    }
+
+    /**
+     * @param string $scheme
+     * @param string $host
+     * @return string
+     * @throws BadUriException
+     */
+    private function getHostUri(string $scheme, string $host) : string
+    {
+        if (in_array($scheme, ['ws', 'wss'], true) === false) {
+            throw new BadUriException(
+                "Url should have scheme ws or wss, not '$scheme' from URI '$this->socketUrl' ."
+            );
+        }
+
+        return ($scheme === 'wss' ? 'ssl' : 'tcp') . '://' . $host;
+    }
+
+    /**
+     * @param string $scheme
+     * @param string $host
+     * @param string $pathWithQuery
+     * @param string $key
+     * @throws ConnectionException
+     */
+    private function validateResponse(string $scheme, string $host, string $pathWithQuery, string $key)
+    {
         $response = stream_get_line($this->socket, self::DEFAULT_RESPONSE_HEADER, "\r\n\r\n");
-        /// @todo Handle version switching
-        // Validate response.
         if (!preg_match(self::SEC_WEBSOCKET_ACCEPT_PTTRN, $response, $matches)) {
             $address = $scheme . '://' . $host . $pathWithQuery;
             throw new ConnectionException(
@@ -107,7 +130,6 @@ class WscMain implements WscCommonsContract
         if ($keyAccept !== $expectedResonse) {
             throw new ConnectionException('Server sent bad upgrade response.');
         }
-        $this->isConnected = true;
     }
 
     /**
