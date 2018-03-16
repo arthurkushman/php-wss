@@ -1,4 +1,4 @@
-# php-wssc
+# php-wss
 Web-socket server/client with multi-process and parse templates support on server and send/receive options on client
 
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/arthurkushman/php-wss/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/arthurkushman/php-wss/?branch=master)
@@ -23,7 +23,7 @@ Just add
 
 ```javascript
 "require": {
-  "arthurkushman/wss": ">=1.3"  
+  "arthurkushman/php-wss": ">=1.3"  
 }
 ```
 
@@ -34,7 +34,7 @@ OR
 perform command in shell
 
 ```bash
-$ composer require arthurkushman/wss
+ composer require arthurkushman/php-wss
 ```
 
 ### Implement Your WebSocket handler class - ex.:
