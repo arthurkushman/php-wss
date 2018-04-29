@@ -245,7 +245,6 @@ class WscMain implements WscCommonsContract
         if (array_key_exists($opcode, self::$opcodes) === false) {
             throw new BadOpcodeException("Bad opcode '$opcode'.  Try 'text' or 'binary'.");
         }
-        echo $payload;
         // record the length of the payload
         $payload_length = strlen($payload);
 

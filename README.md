@@ -72,6 +72,7 @@ class ServerHandler extends WebSocket
 
     public function onClose(ConnectionContract $conn)
     {
+        $conn->send('whatever you need');
         unset($this->clients[array_search($conn, $this->clients)]);
         $conn->close();
     }
