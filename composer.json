@@ -1,5 +1,5 @@
 {
-    "name": "arthurkushman/php-wss",
+    "name": "stereoflo/php-wss",
     "description": "Web-socket server with URI parse and multi-process support",
     "keywords": [
         "web-sockets",
@@ -11,23 +11,13 @@
         "php"
     ],
     "license": "MIT",
-    "homepage": "https://github.com/arthurkushman/php-wss",
+    "homepage": "https://github.com/stereoflo/php-wss",
     "require": {
         "php": ">=7.0"
     },
     "autoload": {
         "psr-4": {
-            "WSSC\\": "src",
-            "WSSCTEST\\": "tests"
+            "WSSC\\": "src"
         }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "WSSC\\": "src",
-            "WSSCTEST\\": "tests"
-        }
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^7"
     }
 }
