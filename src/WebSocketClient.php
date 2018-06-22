@@ -22,5 +22,6 @@ class WebSocketClient extends WscMain
         if (!array_key_exists('fragment_size', $config)) {
             $this->options['fragment_size'] = self::DEFAULT_FRAGMENT_SIZE;
         }
+        $this->connect();
     }
 }
