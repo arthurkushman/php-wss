@@ -13,7 +13,7 @@ class WscMain implements WscCommonsContract
 
     private $socket;
     private $isConnected = false;
-    private $isClosing = false;
+    private $isClosing   = false;
     private $lastOpcode;
     private $closeStatus;
     private $hugePayload;
@@ -28,7 +28,7 @@ class WscMain implements WscCommonsContract
     ];
 
     protected $socketUrl = '';
-    protected $options = [];
+    protected $options   = [];
 
     /**
      * @throws \InvalidArgumentException
@@ -46,9 +46,9 @@ class WscMain implements WscCommonsContract
         $port = isset($urlParts['port']) ? $urlParts['port'] : ($scheme === 'wss' ? 443 : 80);
 
         $pathWithQuery = $this->getPathWithQuery($urlParts);
-        $hostUri = $this->getHostUri($scheme, $host);
+        $hostUri       = $this->getHostUri($scheme, $host);
         // Set the stream context options if they're already set in the config
-        $context = $this->getStreamContext();
+        $context      = $this->getStreamContext();
         $this->socket = @stream_socket_client(
             $hostUri . ':' . $port, $errno, $errstr, $this->options['timeout'], STREAM_CLIENT_CONNECT, $context
         );
@@ -62,7 +62,7 @@ class WscMain implements WscCommonsContract
         stream_set_timeout($this->socket, $this->options['timeout']);
 
         // Generate the WebSocket key.
-        $key = $this->generateKey();
+        $key     = $this->generateKey();
         $headers = [
             'Host'                  => $host . ':' . $port,
             'User-Agent'            => 'websocket-client-php',
@@ -125,7 +125,7 @@ class WscMain implements WscCommonsContract
             );
         }
 
-        $keyAccept = trim($matches[1]);
+        $keyAccept       = trim($matches[1]);
         $expectedResonse = base64_encode(pack('H*', sha1($key . self::SERVER_KEY_ACCEPT)));
         if ($keyAccept !== $expectedResonse) {
             throw new ConnectionException('Server sent bad upgrade response.');
@@ -237,7 +237,7 @@ class WscMain implements WscCommonsContract
         return $this->options['fragment_size'];
     }
 
-    public function send($payload, $opcode = 'text', $masked = true)
+    public function send($payload, $opcode = CommonsContract::EVENT_TYPE_TEXT)
     {
         if (!$this->isConnected) {
             $this->connect();
@@ -261,7 +261,7 @@ class WscMain implements WscCommonsContract
             $final = $payload_length <= $fragment_cursor;
 
             // send the fragment
-            $this->sendFragment($final, $sub_payload, $opcode, $masked);
+            $this->sendFragment($final, $sub_payload, $opcode, true);
 
             // all fragments after the first will be marked a continuation
             $opcode = 'continuation';
@@ -354,7 +354,7 @@ class WscMain implements WscCommonsContract
         $final = (bool)(ord($data[0]) & 1 << 7);
 
         // Parse opcode
-        $opcode_int = ord($data[0]) & 31; // Bits 4-7
+        $opcode_int  = ord($data[0]) & 31; // Bits 4-7
         $opcode_ints = array_flip(self::$opcodes);
         if (!array_key_exists($opcode_int, $opcode_ints)) {
             throw new ConnectionException("Bad opcode in websocket frame: $opcode_int");
@@ -367,17 +367,17 @@ class WscMain implements WscCommonsContract
         }
 
         $payloadLength = $this->getPayloadLength($data);
-        $payload = $this->getPayloadData($data, $payloadLength);
+        $payload       = $this->getPayloadData($data, $payloadLength);
         if ($opcode === CommonsContract::EVENT_TYPE_CLOSE) {
             // Get the close status.
             if ($payloadLength >= 2) {
-                $statusBin = $payload[0] . $payload[1];
-                $status = bindec(sprintf('%08b%08b', ord($payload[0]), ord($payload[1])));
+                $statusBin         = $payload[0] . $payload[1];
+                $status            = bindec(sprintf('%08b%08b', ord($payload[0]), ord($payload[1])));
                 $this->closeStatus = $status;
-                $payload = substr($payload, 2);
+                $payload           = substr($payload, 2);
 
                 if (!$this->isClosing) {
-                    $this->send($statusBin . 'Close acknowledged: ' . $status, 'close'); // Respond.
+                    $this->send($statusBin . 'Close acknowledged: ' . $status, CommonsContract::EVENT_TYPE_CLOSE); // Respond.
                 }
             }
 
@@ -395,7 +395,7 @@ class WscMain implements WscCommonsContract
         } // this is the last fragment, and we are processing a huge_payload
 
         if ($this->hugePayload) {
-            $payload = $this->hugePayload .= $payload;
+            $payload           = $this->hugePayload .= $payload;
             $this->hugePayload = NULL;
         }
 
@@ -411,8 +411,8 @@ class WscMain implements WscCommonsContract
     private function getPayloadData(string $data, int $payloadLength)
     {
         // Masking?
-        $mask = (bool)(ord($data[1]) >> 7);  // Bit 0 in byte 1
-        $payload = '';
+        $mask       = (bool)(ord($data[1]) >> 7);  // Bit 0 in byte 1
+        $payload    = '';
         $maskingKey = '';
         // Get masking key.
         if ($mask) {
@@ -463,12 +463,12 @@ class WscMain implements WscCommonsContract
      */
     public function close(int $status = 1000, string $message = 'ttfn')
     {
-        $statusBin = sprintf('%016b', $status);
+        $statusBin  = sprintf('%016b', $status);
         $status_str = '';
         foreach (str_split($statusBin, 8) as $binstr) {
             $status_str .= chr(bindec($binstr));
         }
-        $this->send($status_str . $message, 'close', true);
+        $this->send($status_str . $message, CommonsContract::EVENT_TYPE_CLOSE);
         $this->isClosing = true;
         return $this->receive(); // Receiving a close frame will close the socket now.
     }
@@ -483,7 +483,7 @@ class WscMain implements WscCommonsContract
 
         if ($written < strlen($data)) {
             throw new ConnectionException(
-                "Could only write $written out of " . strlen($data) . " bytes."
+                "Could only write $written out of " . strlen($data) . ' bytes.'
             );
         }
     }
@@ -542,7 +542,7 @@ class WscMain implements WscCommonsContract
     private function generateKey() : string
     {
         $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"$&/()=[]{}0123456789';
-        $key = '';
+        $key   = '';
         $chLen = strlen($chars);
         for ($i = 0; $i < self::KEY_GEN_LENGTH; $i++) {
             $key .= $chars[random_int(0, $chLen - 1)];
