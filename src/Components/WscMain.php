@@ -36,7 +36,7 @@ class WscMain implements WscCommonsContract
      * @throws ConnectionException
      * @throws \Exception
      */
-    protected function connect() : void
+    protected function connect()
     {
         $urlParts = parse_url($this->socketUrl);
         $scheme = $urlParts['scheme'];
@@ -477,7 +477,7 @@ class WscMain implements WscCommonsContract
      * @param $data
      * @throws ConnectionException
      */
-    protected function write(string $data) : void
+    protected function write(string $data)
     {
         $written = fwrite($this->socket, $data);
 

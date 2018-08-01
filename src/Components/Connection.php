@@ -24,7 +24,7 @@ class Connection implements ConnectionContract, CommonsContract
     /**
      * Closes clients socket stream
      */
-    public function close() : void
+    public function close()
     {
         if (is_resource($this->socketConnection)) {
             fclose($this->socketConnection);
@@ -38,7 +38,7 @@ class Connection implements ConnectionContract, CommonsContract
      * @param string $data pure decoded data from server
      * @throws \Exception
      */
-    public function send($data) : void
+    public function send($data)
     {
         fwrite($this->socketConnection, $this->encode($data));
     }

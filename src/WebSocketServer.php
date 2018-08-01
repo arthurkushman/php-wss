@@ -143,7 +143,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      * @param resource $server
      * @param array $readSocks
      */
-    private function acceptNewClient($server, array &$readSocks) : void
+    private function acceptNewClient($server, array &$readSocks)
     {
         $newClient = stream_socket_accept($server, 0); // must be 0 to non-block
         if ($newClient) {
@@ -170,7 +170,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      * @uses onPong
      * @param array $readSocks
      */
-    private function messagesWorker(array $readSocks) : void
+    private function messagesWorker(array $readSocks)
     {
         foreach ($readSocks as $kSock => $sock) {
             $data = $this->decode(fread($sock, self::MAX_BYTES_READ));
@@ -327,7 +327,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      *
      * @param string $secWebSocketAccept base64 encoded Sec-WebSocket-Accept header
      */
-    private function setHeadersUpgrade($secWebSocketAccept) : void
+    private function setHeadersUpgrade($secWebSocketAccept)
     {
         $this->headersUpgrade = [
             self::HEADERS_UPGRADE_KEY              => self::HEADERS_UPGRADE_VALUE,
@@ -361,7 +361,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      *
      * @param string $headers
      */
-    private function setPathParams(string $headers) : void
+    private function setPathParams(string $headers)
     {
         if (empty($this->handler->pathParams) === false) {
             $matches = [];

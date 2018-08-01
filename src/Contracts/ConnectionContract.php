@@ -9,7 +9,7 @@ namespace WSSC\Contracts;
 interface ConnectionContract
 {
 
-    public function send($data): void;
+    public function send($data);
 
-    public function close(): void;
+    public function close();
 }
