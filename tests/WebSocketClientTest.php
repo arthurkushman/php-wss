@@ -27,7 +27,6 @@ class WebSocketClientTest extends TestCase
      */
     public function is_client_connected()
     {
-        echo 'Running client...' . PHP_EOL;
         $recvMsg = '{"user_id" : 123}';
         $client = new WebSocketClient($this->url);
         try {
@@ -82,5 +81,17 @@ class WebSocketClientTest extends TestCase
         }
         $recv = $client->receive();
         $this->assertEquals($recv, $recvMsg);
+    }
+
+    /**
+     * @test
+     * @throws \Exception
+     */
+    public function it_closes_connection()
+    {
+        $client = new WebSocketClient($this->url);
+
+        $closeRecv = $client->close();
+        $this->assertEmpty($closeRecv);
     }
 }

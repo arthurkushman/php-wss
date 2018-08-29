@@ -490,9 +490,11 @@ class WscMain implements WscCommonsContract
     {
         $statusBin = sprintf('%016b', $status);
         $status_str = '';
+
         foreach (str_split($statusBin, 8) as $binstr) {
             $status_str .= chr(bindec($binstr));
         }
+
         $this->send($status_str . $message, CommonsContract::EVENT_TYPE_CLOSE);
         $this->isClosing = true;
 
@@ -524,6 +526,7 @@ class WscMain implements WscCommonsContract
         $data = '';
         while (($dataLen = strlen($data)) < $len) {
             $buff = fread($this->socket, $len - $dataLen);
+
             if ($buff === false) {
                 $metadata = stream_get_meta_data($this->socket);
                 throw new ConnectionException(
@@ -532,6 +535,7 @@ class WscMain implements WscCommonsContract
                     . json_encode($metadata)
                 );
             }
+
             if ($buff === '') {
                 $metadata = stream_get_meta_data($this->socket);
                 throw new ConnectionException(

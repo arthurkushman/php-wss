@@ -18,10 +18,13 @@ class Connection implements ConnectionContract, CommonsContract
 
     /**
      * Closes clients socket stream
+     *
+     * @throws \Exception
      */
     public function close()
     {
         if (is_resource($this->socketConnection)) {
+            fwrite($this->socketConnection, $this->encode('', self::EVENT_TYPE_CLOSE));
             fclose($this->socketConnection);
         }
     }
