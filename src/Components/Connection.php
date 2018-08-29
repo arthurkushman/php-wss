@@ -11,14 +11,9 @@ class Connection implements ConnectionContract, CommonsContract
 
     private $socketConnection;
 
-    /**
-     * @param $sockConn
-     * @return $this
-     */
-    public function getConnection($sockConn) : self
+    public function __construct($sockConn)
     {
         $this->socketConnection = $sockConn;
-        return $this;
     }
 
     /**

@@ -23,12 +23,11 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
     private $totalClients = 0;
     private $maxClients = 1;
     private $handler;
-    private $connImpl;
     private $cureentConn;
     // for the very 1st time must be true
     private $stepRecursion = true;
 
-    const MAX_BYTES_READ = 8192;
+    const MAX_BYTES_READ    = 8192;
     const HEADER_BYTES_READ = 1024;
     // must be the time for interaction between each client
     const STREAM_SELECT_TIMEOUT = 3600;
@@ -36,10 +35,11 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
     const NON_BLOCK = 0;
     // max clients to fork another process
     const MAX_CLIENTS_REMAINDER_FORK = 1000;
-    const PROC_TITLE = 'php-wss';
+    const PROC_TITLE                 = 'php-wss';
 
     /**
      * WebSocketServer constructor.
+     *
      * @param WebSocket $handler
      * @param array $config
      */
@@ -49,12 +49,10 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
             'host' => self::DEFAULT_HOST,
             'port' => self::DEFAULT_PORT,
         ]
-    )
-    {
+    ) {
         ini_set('default_socket_timeout', 5); // this should be >= 5 sec, otherwise there will be broken pipe - tested
         $this->handler = $handler;
         $this->config = $config;
-        $this->connImpl = new Connection();
     }
 
     /**
@@ -78,7 +76,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      * and when forks equals true which prevents it from infinite recursive iterations
      *
      * @param resource $server server connection
-     * @param bool $fork flag to fork or run event loop
+     * @param bool $fork       flag to fork or run event loop
      */
     private function eventLoop($server, bool $fork = false)
     {
@@ -148,18 +146,21 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
         $newClient = stream_socket_accept($server, 0); // must be 0 to non-block
         if ($newClient) {
             // print remote client information, ip and port number
-//            $socketName = stream_socket_get_name($newClient, true);
+            //            $socketName = stream_socket_get_name($newClient, true);
             // important to read from headers here coz later client will change and there will be only msgs on pipe
             $headers = fread($newClient, self::HEADER_BYTES_READ);
             if (empty($this->handler->pathParams[0]) === false) {
                 $this->setPathParams($headers);
             }
+
             $this->clients[] = $newClient;
-            $this->stepRecursion = true; // set on new client coz of remainder % is always 0
+            $this->stepRecursion = true; // set on new client - remainder % is always 0
+
             // trigger OPEN event
-            $this->handler->onOpen($this->connImpl->getConnection($newClient));
+            $this->handler->onOpen(new Connection($newClient));
             $this->handshake($newClient, $headers);
         }
+
         //delete the server socket from the read sockets
         unset($readSocks[array_search($server, $readSocks, false)]);
     }
@@ -176,8 +177,9 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
             $data = $this->decode(fread($sock, self::MAX_BYTES_READ));
             $dataType = $data['type'];
             $dataPayload = $data['payload'];
+
             // to manipulate connection through send/close methods via handler, specified in IConnection
-            $this->cureentConn = $this->connImpl->getConnection($sock);
+            $this->cureentConn = new Connection($sock);
             if (empty($data) || $dataType === self::EVENT_TYPE_CLOSE) { // close event triggered from client - browser tab or close socket event
                 // trigger CLOSE event
                 try {
@@ -185,6 +187,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
                 } catch (WebSocketException $e) {
                     $e->printStack();
                 }
+
                 // to avoid event leaks
                 unset($this->clients[array_search($sock, $this->clients)], $readSocks[$kSock]);
                 continue;
@@ -300,10 +303,10 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      * Handshakes/upgrade and key parse
      *
      * @param resource $client Source client socket to write
-     * @param string $headers Headers that client has been sent
+     * @param string $headers  Headers that client has been sent
      * @return string   socket handshake key (Sec-WebSocket-Key)| false on parse error
      */
-    private function handshake($client, string $headers) : string
+    private function handshake($client, string $headers): string
     {
         $match = [];
         preg_match(self::SEC_WEBSOCKET_KEY_PTRN, $headers, $match);
@@ -319,6 +322,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
         $upgradeHeaders = $this->getHeadersUpgrade();
 
         fwrite($client, $upgradeHeaders);
+
         return $key;
     }
 
@@ -332,7 +336,8 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
         $this->headersUpgrade = [
             self::HEADERS_UPGRADE_KEY              => self::HEADERS_UPGRADE_VALUE,
             self::HEADERS_CONNECTION_KEY           => self::HEADERS_CONNECTION_VALUE,
-            self::HEADERS_SEC_WEBSOCKET_ACCEPT_KEY => ' ' . $secWebSocketAccept // the space before key is really important
+            self::HEADERS_SEC_WEBSOCKET_ACCEPT_KEY => ' ' . $secWebSocketAccept
+            // the space before key is really important
         ];
     }
 
@@ -341,7 +346,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      *
      * @return string   Headers to Upgrade communication connection
      */
-    private function getHeadersUpgrade() : string
+    private function getHeadersUpgrade(): string
     {
         $handShakeHeaders = self::HEADER_HTTP1_1 . self::HEADERS_EOL;
         if (empty($this->headersUpgrade)) {
@@ -353,6 +358,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
                 $handShakeHeaders .= self::HEADERS_EOL;
             }
         }
+
         return $handShakeHeaders;
     }
 
@@ -373,7 +379,8 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
                     $this->handler->pathParams[$param] = substr($left, strpos($left, '/') + 1);
                 } else {
                     // eat both slashes
-                    $this->handler->pathParams[$param] = substr($left, strpos($left, '/') + 1, strpos($left, '/', 1) - 1);
+                    $this->handler->pathParams[$param] = substr($left, strpos($left, '/') + 1,
+                        strpos($left, '/', 1) - 1);
                 }
                 // clear the declaration of parsed param
                 unset($this->handler->pathParams[array_search($param, $this->handler->pathParams, false)]);
