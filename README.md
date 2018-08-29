@@ -112,6 +112,10 @@ class ServerHandler extends WebSocket
 ### Then put code bellow to Your CLI/Console script and run 
 
 ```php
+<?php
+use WSSC\WebSocketServer;
+use WSSCTEST\ServerHandler;
+
 $websocketServer = new WebSocketServer(new ServerHandler(), [
     'host' => '0.0.0.0',
     'port' => 8000
@@ -122,6 +126,7 @@ $websocketServer->run();
 ## How do I set WebSocket Client connection?
 
 ```php
+<?php
 use WSSC\WebSocketClient;
 
 $client = new WebSocketClient('ws://localhost:8000/notifications/messanger/yourtoken123');
@@ -132,6 +137,32 @@ echo $client->receive();
 That`s it, client is just sending any text content (message) to the Server.
 
 Server reads all the messages and push them to Handler class, for further custom processing.
+
+## How to pass an optional timeout, headers, fragment_size etc?
+You can pass optional configuration either by passing them to constructor or via setters e.g.:
+```php
+<?php
+use WSSC\WebSocketClient;
+
+$client = new WebSocketClient('ws://localhost:8000/notifications/messanger/yourtoken123');
+// overriding default values with any custom
+$client->setFragmentSize(8096)->setTimeout(15)->setHeaders([
+    'X-Custom-Header' => 'Foo Bar Baz'
+]);
+```
+
+```php
+<?php
+use WSSC\WebSocketClient;
+
+$client = new WebSocketClient('ws://localhost:8000/notifications/messanger/yourtoken123', [
+    'timeout' => 15,
+    'fragment_size' => 8096,
+    'headers' => [
+        'X-Custom-Header' => 'Foo Bar Baz',        
+    ],
+]);
+```
 
 ## How to test
 

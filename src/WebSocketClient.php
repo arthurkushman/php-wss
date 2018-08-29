@@ -22,9 +22,18 @@ class WebSocketClient extends WscMain
         $this->socketUrl = $url;
         if (!array_key_exists('timeout', $config)) {
             $this->options['timeout'] = self::DEFAULT_TIMEOUT;
+        } else {
+            $this->options['timeout'] = $config['timeout'];
         }
+
         if (!array_key_exists('fragment_size', $config)) {
             $this->options['fragment_size'] = self::DEFAULT_FRAGMENT_SIZE;
+        } else {
+            $this->options['fragment_size'] = $config['fragment_size'];
+        }
+
+        if (array_key_exists('headers', $config)) {
+            $this->options['headers'] = $config['headers'];
         }
         $this->connect();
     }
