@@ -15,8 +15,9 @@ class WebSocketServerTest extends TestCase
     {
         echo 'Running server...' . PHP_EOL;
         $websocketServer = new WebSocketServer(new ServerHandler(), [
-            'host' => '0.0.0.0',
-            'port' => 8000,
+            'host'                   => '0.0.0.0',
+            'port'                   => 8000,
+            'clients_per_fork_limit' => 2500,
         ]);
         $websocketServer->run();
     }

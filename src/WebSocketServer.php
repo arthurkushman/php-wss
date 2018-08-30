@@ -24,18 +24,20 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
     private $maxClients = 1;
     private $handler;
     private $cureentConn;
+
     // for the very 1st time must be true
     private $stepRecursion = true;
+
+    // max clients to fork another process
+    private $clientsPerFork = 1000;
 
     const MAX_BYTES_READ    = 8192;
     const HEADER_BYTES_READ = 1024;
     // must be the time for interaction between each client
     const STREAM_SELECT_TIMEOUT = 3600;
     // stream non-blocking 
-    const NON_BLOCK = 0;
-    // max clients to fork another process
-    const MAX_CLIENTS_REMAINDER_FORK = 1000;
-    const PROC_TITLE                 = 'php-wss';
+    const NON_BLOCK  = 0;
+    const PROC_TITLE = 'php-wss';
 
     /**
      * WebSocketServer constructor.
@@ -53,6 +55,11 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
         ini_set('default_socket_timeout', 5); // this should be >= 5 sec, otherwise there will be broken pipe - tested
         $this->handler = $handler;
         $this->config = $config;
+
+        // setting config options
+        if (!empty($config['clients_per_fork_limit']) && (int)$config['clients_per_fork_limit'] > 0) {
+            $this->clientsPerFork = (int)$config['clients_per_fork_limit'];
+        }
     }
 
     /**
@@ -106,7 +113,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
             }
 
             if ($this->totalClients !== 0 // avoid 0 process creation
-                && $this->totalClients % self::MAX_CLIENTS_REMAINDER_FORK === 0 // only when N is there
+                && $this->totalClients % $this->clientsPerFork === 0 // only when N is there
                 && true === $this->stepRecursion // only once
                 && $this->maxClients === $this->totalClients // only if stack grows
             ) {
@@ -114,7 +121,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
                 $this->eventLoop($server, true);
             }
 
-            if ($this->totalClients !== 0 && $this->totalClients % self::MAX_CLIENTS_REMAINDER_FORK === 0 && $this->maxClients > $this->totalClients) { // there is less connection for amount of processes at this moment
+            if ($this->totalClients !== 0 && $this->totalClients % $this->clientsPerFork === 0 && $this->maxClients > $this->totalClients) { // there is less connection for amount of processes at this moment
                 exit(1);
             }
 
