@@ -3,6 +3,7 @@
 namespace WSSC;
 
 use WSSC\Components\Connection;
+use WSSC\Components\ServerConfig;
 use WSSC\Contracts\CommonsContract;
 use WSSC\Contracts\WebSocket;
 use WSSC\Contracts\WebSocketServerContract;
@@ -10,6 +11,9 @@ use WSSC\Exceptions\WebSocketException;
 
 /**
  * Create by Arthur Kushman
+ *
+ * @property ServerConfig config
+ * @property WebSocket handler
  */
 class WebSocketServer implements WebSocketServerContract, CommonsContract
 {
@@ -33,9 +37,8 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
 
     const MAX_BYTES_READ    = 8192;
     const HEADER_BYTES_READ = 1024;
-    // must be the time for interaction between each client
-    const STREAM_SELECT_TIMEOUT = 3600;
-    // stream non-blocking 
+
+    // stream non-blocking
     const NON_BLOCK  = 0;
     const PROC_TITLE = 'php-wss';
 
@@ -43,23 +46,16 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      * WebSocketServer constructor.
      *
      * @param WebSocket $handler
-     * @param array $config
+     * @param ServerConfig $config
      */
     public function __construct(
         WebSocket $handler,
-        $config = [
-            'host' => self::DEFAULT_HOST,
-            'port' => self::DEFAULT_PORT,
-        ]
+        ServerConfig $config
     ) {
         ini_set('default_socket_timeout', 5); // this should be >= 5 sec, otherwise there will be broken pipe - tested
+
         $this->handler = $handler;
         $this->config = $config;
-
-        // setting config options
-        if (!empty($config['clients_per_fork_limit']) && (int)$config['clients_per_fork_limit'] > 0) {
-            $this->clientsPerFork = (int)$config['clients_per_fork_limit'];
-        }
     }
 
     /**
@@ -70,10 +66,12 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
         $errno = NULL;
         $errorMessage = '';
 
-        $server = stream_socket_server("tcp://{$this->config['host']}:{$this->config['port']}", $errno, $errorMessage);
+        $server = stream_socket_server("tcp://{$this->config->getHost()}:{$this->config->getPort()}", $errno, $errorMessage);
+
         if ($server === false) {
             die('Could not bind to socket: ' . $errno . ' - ' . $errorMessage . PHP_EOL);
         }
+
         @cli_set_process_title(self::PROC_TITLE);
         $this->eventLoop($server);
     }
@@ -130,7 +128,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
             $readSocks[] = $server;
 
             //start reading and use a large timeout
-            if (!stream_select($readSocks, $write, $except, self::STREAM_SELECT_TIMEOUT)) {
+            if (!stream_select($readSocks, $write, $except, $this->config->getStreamSelectTimeout())) {
                 die('something went wrong while selecting');
             }
 

@@ -3,6 +3,7 @@
 namespace WSSCTEST;
 
 use PHPUnit\Framework\TestCase;
+use WSSC\Components\ServerConfig;
 use WSSC\WebSocketServer;
 
 class WebSocketServerTest extends TestCase
@@ -14,11 +15,12 @@ class WebSocketServerTest extends TestCase
     public static function is_server_running()
     {
         echo 'Running server...' . PHP_EOL;
-        $websocketServer = new WebSocketServer(new ServerHandler(), [
-            'host'                   => '0.0.0.0',
-            'port'                   => 8000,
-            'clients_per_fork_limit' => 2500,
-        ]);
+
+        $config = new ServerConfig();
+        $config->setClientsPerFork(2500);
+        $config->setStreamSelectTimeout(2 * 3600);
+
+        $websocketServer = new WebSocketServer(new ServerHandler(), $config);
         $websocketServer->run();
     }
 }
