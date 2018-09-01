@@ -16,6 +16,7 @@ interface WscCommonsContract
     const SEC_WEBSOCKET_ACCEPT_PTTRN = '/Sec-WebSocket-Accept:\s(.*)$/mUi';
     const SERVER_KEY_ACCEPT = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
     const RESOURCE_TYPE_STREAM = '';
+
     // MASKS
     const MASK_125 = 125;
     const MASK_126 = 126;

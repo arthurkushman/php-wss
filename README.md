@@ -19,7 +19,15 @@ Client:
 
 Preferred way to install is with Composer.
 
-Just add 
+perform command in shell
+
+```bash
+ composer require arthurkushman/php-wss
+```
+
+OR 
+
+just add 
 
 ```javascript
 "require": {
@@ -27,15 +35,7 @@ Just add
 }
 ```
 
-in your projects composer.json.
-
-OR 
-
-perform command in shell
-
-```bash
- composer require arthurkushman/php-wss
-```
+to your projects composer.json.
 
 ### Implement Your WebSocket handler class - ex.:
 
@@ -121,8 +121,8 @@ $config = new ServerConfig();
 $config->setClientsPerFork(2500);
 $config->setStreamSelectTimeout(2 * 3600);
 
-$websocketServer = new WebSocketServer(new ServerHandler(), $config);
-$websocketServer->run();
+$webSocketServer = new WebSocketServer(new ServerHandler(), $config);
+$webSocketServer->run();
 ```
 
 ## How do I set WebSocket Client connection?
@@ -130,8 +130,9 @@ $websocketServer->run();
 ```php
 <?php
 use WSSC\WebSocketClient;
+use \WSSC\Components\ClientConfig;
 
-$client = new WebSocketClient('ws://localhost:8000/notifications/messanger/yourtoken123');
+$client = new WebSocketClient('ws://localhost:8000/notifications/messanger/yourtoken123', new ClientConfig());
 $client->send('{"user_id" : 123}');
 echo $client->receive();
 ```
@@ -140,30 +141,21 @@ That`s it, client is just sending any text content (message) to the Server.
 
 Server reads all the messages and push them to Handler class, for further custom processing.
 
-## How to pass an optional timeout, headers, fragment_size etc?
-You can pass optional configuration either by passing them to constructor or via setters e.g.:
+## How to pass an optional timeout, headers, fragment size etc?
+You can pass optional configuration to `WebSocketClient`'s constructor e.g.:
 ```php
 <?php
 use WSSC\WebSocketClient;
+use WSSC\Components\ClientConfig;
 
-$client = new WebSocketClient('ws://localhost:8000/notifications/messanger/yourtoken123');
-// overriding default values with any custom
-$client->setFragmentSize(8096)->setTimeout(15)->setHeaders([
-    'X-Custom-Header' => 'Foo Bar Baz'
+$config = new ClientConfig();
+$config->setFragmentSize(8096);
+$config->setTimeout(15);
+$config->setHeaders([
+    'X-Custom-Header' => 'Foo Bar Baz',
 ]);
-```
 
-```php
-<?php
-use WSSC\WebSocketClient;
-
-$client = new WebSocketClient('ws://localhost:8000/notifications/messanger/yourtoken123', [
-    'timeout' => 15,
-    'fragment_size' => 8096,
-    'headers' => [
-        'X-Custom-Header' => 'Foo Bar Baz',        
-    ],
-]);
+$client = new WebSocketClient('ws://localhost:8000/notifications/messanger/yourtoken123', $config);
 ```
 
 ## How to test

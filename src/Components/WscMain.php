@@ -8,6 +8,13 @@ use WSSC\Exceptions\BadOpcodeException;
 use WSSC\Exceptions\BadUriException;
 use WSSC\Exceptions\ConnectionException;
 
+/**
+ * Class WscMain
+ *
+ * @package WSSC\Components
+ *
+ * @property ClientConfig config
+ */
 class WscMain implements WscCommonsContract
 {
 
@@ -28,7 +35,7 @@ class WscMain implements WscCommonsContract
     ];
 
     protected $socketUrl = '';
-    protected $options = [];
+    protected $config;
 
     /**
      * @throws \InvalidArgumentException
@@ -48,11 +55,13 @@ class WscMain implements WscCommonsContract
 
         $pathWithQuery = $this->getPathWithQuery($urlParts);
         $hostUri = $this->getHostUri($scheme, $host);
+
         // Set the stream context options if they're already set in the config
         $context = $this->getStreamContext();
         $this->socket = @stream_socket_client(
-            $hostUri . ':' . $port, $errno, $errstr, $this->options['timeout'], STREAM_CLIENT_CONNECT, $context
+            $hostUri . ':' . $port, $errno, $errstr, $this->config->getTimeout(), STREAM_CLIENT_CONNECT, $context
         );
+
         if ($this->socket === false) {
             throw new ConnectionException(
                 "Could not open socket to \"$host:$port\": $errstr ($errno)."
@@ -60,7 +69,7 @@ class WscMain implements WscCommonsContract
         }
 
         // Set timeout on the stream as well.
-        stream_set_timeout($this->socket, $this->options['timeout']);
+        stream_set_timeout($this->socket, $this->config->getTimeout());
 
         // Generate the WebSocket key.
         $key = $this->generateKey();
@@ -79,8 +88,8 @@ class WscMain implements WscCommonsContract
         }
 
         // Add and override with headers from options.
-        if (isset($this->options['headers'])) {
-            $headers = array_merge($headers, $this->options['headers']);
+        if (!empty($this->config->getHeaders())) {
+            $headers = array_merge($headers, $this->config->getHeaders());
         }
 
         $header = $this->getHeaders($pathWithQuery, $headers);
@@ -142,10 +151,10 @@ class WscMain implements WscCommonsContract
      */
     private function getStreamContext()
     {
-        if (isset($this->options['context'])) {
+        if ($this->config->getContext() !== NULL) {
             // Suppress the error since we'll catch it below
-            if (@get_resource_type($this->options['context']) === 'stream-context') {
-                return $this->options['context'];
+            if (@get_resource_type($this->config->getContext()) === 'stream-context') {
+                return $this->config->getContext();
             }
 
             throw new \InvalidArgumentException(
@@ -225,8 +234,7 @@ class WscMain implements WscCommonsContract
      */
     public function setTimeout(int $timeout, $microSecs = NULL): WscMain
     {
-        $this->options['timeout'] = $timeout;
-
+        $this->config->setTimeout($timeout);
         if ($this->socket && get_resource_type($this->socket) === 'stream') {
             stream_set_timeout($this->socket, $timeout, $microSecs);
         }
@@ -235,28 +243,16 @@ class WscMain implements WscCommonsContract
     }
 
     /**
-     * @param $fragmentSize
-     * @return WscMain
+     * Sends message to opened socket connection client->server
+     *
+     * @param $payload
+     * @param string $opcode
+     * @throws \InvalidArgumentException
+     * @throws BadOpcodeException
+     * @throws BadUriException
+     * @throws ConnectionException
+     * @throws \Exception
      */
-    public function setFragmentSize(int $fragmentSize): WscMain
-    {
-        $this->options['fragment_size'] = $fragmentSize;
-
-        return $this;
-    }
-
-    public function getFragmentSize()
-    {
-        return $this->options['fragment_size'];
-    }
-
-    public function setHeaders(array $headers)
-    {
-        $this->options['headers'] = $headers;
-
-        return $this;
-    }
-
     public function send($payload, $opcode = CommonsContract::EVENT_TYPE_TEXT)
     {
         if (!$this->isConnected) {
@@ -266,19 +262,19 @@ class WscMain implements WscCommonsContract
             throw new BadOpcodeException("Bad opcode '$opcode'.  Try 'text' or 'binary'.");
         }
         // record the length of the payload
-        $payload_length = strlen($payload);
+        $payloadLength = strlen($payload);
 
-        $fragment_cursor = 0;
+        $fragmentCursor = 0;
         // while we have data to send
-        while ($payload_length > $fragment_cursor) {
+        while ($payloadLength > $fragmentCursor) {
             // get a fragment of the payload
-            $sub_payload = substr($payload, $fragment_cursor, $this->options['fragment_size']);
+            $sub_payload = substr($payload, $fragmentCursor, $this->config->getFragmentSize());
 
             // advance the cursor
-            $fragment_cursor += $this->options['fragment_size'];
+            $fragmentCursor += $this->config->getFragmentSize();
 
             // is this the final fragment to send?
-            $final = $payload_length <= $fragment_cursor;
+            $final = $payloadLength <= $fragmentCursor;
 
             // send the fragment
             $this->sendFragment($final, $sub_payload, $opcode, true);
@@ -345,6 +341,16 @@ class WscMain implements WscCommonsContract
         $this->write($frame);
     }
 
+    /**
+     * Receives message client<-server
+     *
+     * @return null|string
+     * @throws \InvalidArgumentException
+     * @throws BadOpcodeException
+     * @throws BadUriException
+     * @throws ConnectionException
+     * @throws \Exception
+     */
     public function receive()
     {
         if (!$this->isConnected) {
@@ -362,8 +368,11 @@ class WscMain implements WscCommonsContract
 
     /**
      * @return null|string
+     * @throws \InvalidArgumentException
      * @throws BadOpcodeException
+     * @throws BadUriException
      * @throws ConnectionException
+     * @throws \Exception
      */
     protected function receiveFragment()
     {
@@ -389,6 +398,7 @@ class WscMain implements WscCommonsContract
 
         $payloadLength = $this->getPayloadLength($data);
         $payload = $this->getPayloadData($data, $payloadLength);
+
         if ($opcode === CommonsContract::EVENT_TYPE_CLOSE) {
             // Get the close status.
             if ($payloadLength >= 2) {
@@ -431,16 +441,18 @@ class WscMain implements WscCommonsContract
      * @return string
      * @throws ConnectionException
      */
-    private function getPayloadData(string $data, int $payloadLength)
+    private function getPayloadData(string $data, int $payloadLength): string
     {
         // Masking?
         $mask = (bool)(ord($data[1]) >> 7);  // Bit 0 in byte 1
         $payload = '';
         $maskingKey = '';
+
         // Get masking key.
         if ($mask) {
             $maskingKey = $this->read(4);
         }
+
         // Get the actual payload, if any (might not be for e.g. close frames.
         if ($payloadLength > 0) {
             $data = $this->read($payloadLength);

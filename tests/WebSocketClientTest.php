@@ -3,6 +3,7 @@
 namespace WSSCTEST;
 
 use PHPUnit\Framework\TestCase;
+use WSSC\Components\ClientConfig;
 use WSSC\Exceptions\BadOpcodeException;
 use WSSC\WebSocketClient;
 
@@ -28,7 +29,7 @@ class WebSocketClientTest extends TestCase
     public function is_client_connected()
     {
         $recvMsg = '{"user_id" : 123}';
-        $client = new WebSocketClient($this->url);
+        $client = new WebSocketClient($this->url, new ClientConfig());
         try {
             $client->send($recvMsg);
         } catch (BadOpcodeException $e) {
@@ -44,41 +45,22 @@ class WebSocketClientTest extends TestCase
      */
     public function it_sends_with_headers_via_constructor()
     {
-        $recvMsg = '{"user_id" : 123}';
-        $client = new WebSocketClient($this->url, [
-            'timeout'       => 15,
-            'fragment_size' => 8096,
-            'headers'       => [
-                'X-Custom-Header' => 'Foo Bar Baz',
-            ],
+        $config = new ClientConfig();
+        $config->setFragmentSize(8096);
+        $config->setTimeout(15);
+        $config->setHeaders([
+            'X-Custom-Header' => 'Foo Bar Baz',
         ]);
+
+        $recvMsg = '{"user_id" : 123}';
+        $client = new WebSocketClient($this->url, $config);
 
         try {
             $client->send($recvMsg);
         } catch (BadOpcodeException $e) {
             echo 'Couldn`t sent: ' . $e->getMessage();
         }
-        $recv = $client->receive();
-        $this->assertEquals($recv, $recvMsg);
-    }
 
-    /**
-     * @test
-     * @throws \Exception
-     */
-    public function it_sends_with_headers_via_setters()
-    {
-        $recvMsg = '{"user_id" : 123}';
-        $client = new WebSocketClient($this->url);
-        $client->setFragmentSize(8096)->setTimeout(15)->setHeaders([
-            'X-Custom-Header' => 'Foo Bar Baz'
-        ]);
-
-        try {
-            $client->send($recvMsg);
-        } catch (BadOpcodeException $e) {
-            echo 'Couldn`t sent: ' . $e->getMessage();
-        }
         $recv = $client->receive();
         $this->assertEquals($recv, $recvMsg);
     }
@@ -89,7 +71,7 @@ class WebSocketClientTest extends TestCase
      */
     public function it_closes_connection()
     {
-        $client = new WebSocketClient($this->url);
+        $client = new WebSocketClient($this->url, new ClientConfig());
 
         $closeRecv = $client->close();
         $this->assertEmpty($closeRecv);
