@@ -115,12 +115,14 @@ class ServerHandler extends WebSocket
 <?php
 use WSSC\WebSocketServer;
 use WSSCTEST\ServerHandler;
+use WSSC\Components\ServerConfig;
 
-$websocketServer = new WebSocketServer(new ServerHandler(), [
-    'host' => '0.0.0.0',
-    'port' => 8000
-        ]);
-$websocketServer->run(); 
+$config = new ServerConfig();
+$config->setClientsPerFork(2500);
+$config->setStreamSelectTimeout(2 * 3600);
+
+$websocketServer = new WebSocketServer(new ServerHandler(), $config);
+$websocketServer->run();
 ```
 
 ## How do I set WebSocket Client connection?
