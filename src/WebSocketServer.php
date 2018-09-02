@@ -108,22 +108,29 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
             }
 
             if ($this->totalClients !== 0 // avoid 0 process creation
-                && $this->totalClients % $this->config->getClientsPerFork() === 0 // only when N is there
                 && true === $this->stepRecursion // only once
                 && $this->maxClients === $this->totalClients // only if stack grows
+                && $this->totalClients % $this->config->getClientsPerFork() === 0 // only when N is there
             ) {
                 $this->stepRecursion = false;
                 $this->eventLoop($server, true);
             }
 
-            if ($this->totalClients !== 0 && $this->totalClients % $this->config->getClientsPerFork() === 0
-                && $this->maxClients > $this->totalClients) { // there is less connection for amount of processes at this moment
+            if ($this->totalClients !== 0 && $this->maxClients > $this->totalClients
+                && $this->totalClients % $this->config->getClientsPerFork() === 0) { // there is less connection for amount of processes at this moment
                 exit(1);
             }
 
             //prepare readable sockets
             $readSocks = $this->clients;
             $readSocks[] = $server;
+
+            // clear socket resources that were closed, thus avoiding (stream_select(): supplied resource is not a valid stream resource)
+            foreach ($readSocks as $k => $sock) {
+                if (!is_resource($sock)) {
+                    unset($readSocks[$k]);
+                }
+            }
 
             //start reading and use a large timeout
             if (!stream_select($readSocks, $write, $except, $this->config->getStreamSelectTimeout())) {
@@ -376,6 +383,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
             $matches = [];
             preg_match('/GET\s(.*?)\s/', $headers, $matches);
             $left = $matches[1];
+
             foreach ($this->handler->pathParams as $k => $param) {
                 if (empty($this->handler->pathParams[$k + 1]) && strpos($left, '/', 1) === false) {
                     // do not eat last char if there is no / at the end
@@ -385,6 +393,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
                     $this->handler->pathParams[$param] = substr($left, strpos($left, '/') + 1,
                         strpos($left, '/', 1) - 1);
                 }
+
                 // clear the declaration of parsed param
                 unset($this->handler->pathParams[array_search($param, $this->handler->pathParams, false)]);
                 $left = substr($left, strpos($left, '/', 1));
