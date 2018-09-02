@@ -57,6 +57,8 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
 
     /**
      * Runs main process - Anscestor with server socket on TCP
+     *
+     * @throws WebSocketException
      */
     public function run()
     {
@@ -66,7 +68,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
         $server = stream_socket_server("tcp://{$this->config->getHost()}:{$this->config->getPort()}", $errno, $errorMessage);
 
         if ($server === false) {
-            die('Could not bind to socket: ' . $errno . ' - ' . $errorMessage . PHP_EOL);
+           throw new WebSocketException('Could not bind to socket: ' . $errno . ' - ' . $errorMessage . PHP_EOL);
         }
 
         @cli_set_process_title(self::PROC_TITLE);
