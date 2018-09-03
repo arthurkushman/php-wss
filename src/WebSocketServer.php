@@ -328,6 +328,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
 
         $key = $match[1];
         $this->handshakes[(int)$client] = $key;
+
         // sending header according to WebSocket Protocol
         $secWebSocketAccept = base64_encode(sha1(trim($key) . self::HEADER_WEBSOCKET_ACCEPT_HASH, true));
         $this->setHeadersUpgrade($secWebSocketAccept);
@@ -364,6 +365,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
         if (empty($this->headersUpgrade)) {
             die('Headers array is not set' . PHP_EOL);
         }
+
         foreach ($this->headersUpgrade as $key => $header) {
             $handShakeHeaders .= $key . ':' . $header . self::HEADERS_EOL;
             if ($key === self::HEADERS_SEC_WEBSOCKET_ACCEPT_KEY) { // add additional EOL fo Sec-WebSocket-Accept

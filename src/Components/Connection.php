@@ -81,14 +81,17 @@ class Connection implements ConnectionContract, CommonsContract
         if ($payloadLength > self::PAYLOAD_MAX_BITS) {
             $payloadLengthBin = str_split(sprintf('%064b', $payloadLength), self::PAYLOAD_CHUNK);
             $frameHead[1] = ($masked === true) ? self::MASK_255 : self::MASK_127;
+
             for ($i = 0; $i < 8; $i++) {
                 $frameHead[$i + 2] = bindec($payloadLengthBin[$i]);
             }
+
             // most significant bit MUST be 0
             if ($frameHead[2] > self::MASK_127) {
-                return ['type'    => $type,
-                        'payload' => $payload,
-                        'error'   => WebSocketServerContract::ERR_FRAME_TOO_LARGE,
+                return [
+                    'type'    => $type,
+                    'payload' => $payload,
+                    'error'   => WebSocketServerContract::ERR_FRAME_TOO_LARGE,
                 ];
             }
         } elseif ($payloadLength > self::MASK_125) {
@@ -109,6 +112,7 @@ class Connection implements ConnectionContract, CommonsContract
         foreach (array_keys($frameHead) as $i) {
             $frameHead[$i] = chr($frameHead[$i]);
         }
+
         // generate a random mask:
         $mask = [];
         if ($masked === true) {
@@ -136,5 +140,15 @@ class Connection implements ConnectionContract, CommonsContract
     public function getUniqueSocketId(): int
     {
         return (int)$this->socketConnection;
+    }
+
+    /**
+     *  Gets client socket address host/port or UNIX path
+     *
+     * @return string
+     */
+    public function getPeerName(): string
+    {
+        return stream_socket_get_name($this->socketConnection, true);
     }
 }

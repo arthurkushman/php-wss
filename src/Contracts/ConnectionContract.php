@@ -14,4 +14,6 @@ interface ConnectionContract
     public function close();
 
     public function getUniqueSocketId(): int;
+
+    public function getPeerName(): string;
 }
