@@ -125,7 +125,7 @@ $webSocketServer = new WebSocketServer(new ServerHandler(), $config);
 $webSocketServer->run();
 ```
 
-## How do I set WebSocket Client connection?
+### How do I set WebSocket Client connection?
 
 ```php
 <?php
@@ -141,7 +141,7 @@ That`s it, client is just sending any text content (message) to the Server.
 
 Server reads all the messages and push them to Handler class, for further custom processing.
 
-## How to pass an optional timeout, headers, fragment size etc?
+### How to pass an optional timeout, headers, fragment size etc?
 You can pass optional configuration to `WebSocketClient`'s constructor e.g.:
 ```php
 <?php
@@ -158,7 +158,13 @@ $config->setHeaders([
 $client = new WebSocketClient('ws://localhost:8000/notifications/messanger/yourtoken123', $config);
 ```
 
-## How to test
+### BroadCasting
+You may wish to broadcast messages by simply calling `broadCast` method on Connection object in any method of your `ServerHandler` class:
+```php
+$conn->broadCast('hey everybody...');    
+```
+
+### How to test
 
 To run the Server - execute from the root of a project:
 ```php

@@ -157,8 +157,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
     {
         $newClient = stream_socket_accept($server, 0); // must be 0 to non-block
         if ($newClient) {
-            // print remote client information, ip and port number
-            //            $socketName = stream_socket_get_name($newClient, true);
+
             // important to read from headers here coz later client will change and there will be only msgs on pipe
             $headers = fread($newClient, self::HEADER_BYTES_READ);
             if (empty($this->handler->pathParams[0]) === false) {
@@ -169,7 +168,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
             $this->stepRecursion = true; // set on new client - remainder % is always 0
 
             // trigger OPEN event
-            $this->handler->onOpen(new Connection($newClient));
+            $this->handler->onOpen(new Connection($newClient, $this->clients));
             $this->handshake($newClient, $headers);
         }
 
@@ -191,7 +190,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
             $dataPayload = $data['payload'];
 
             // to manipulate connection through send/close methods via handler, specified in IConnection
-            $this->cureentConn = new Connection($sock);
+            $this->cureentConn = new Connection($sock, $this->clients);
             if (empty($data) || $dataType === self::EVENT_TYPE_CLOSE) { // close event triggered from client - browser tab or close socket event
                 // trigger CLOSE event
                 try {

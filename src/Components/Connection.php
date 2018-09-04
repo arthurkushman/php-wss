@@ -10,10 +10,18 @@ class Connection implements ConnectionContract, CommonsContract
 {
 
     private $socketConnection;
+    private $clients;
 
-    public function __construct($sockConn)
+    /**
+     * Connection constructor.
+     *
+     * @param $sockConn
+     * @param array $clients
+     */
+    public function __construct($sockConn, array $clients = [])
     {
         $this->socketConnection = $sockConn;
+        $this->clients = $clients;
     }
 
     /**
@@ -36,9 +44,22 @@ class Connection implements ConnectionContract, CommonsContract
      * @param string $data pure decoded data from server
      * @throws \Exception
      */
-    public function send($data)
+    public function send(string $data)
     {
         fwrite($this->socketConnection, $this->encode($data));
+    }
+
+    /**
+     * @param string $data data to send to clients
+     * @throws \Exception
+     */
+    public function broadCast(string $data)
+    {
+        foreach ($this->clients as $client) {
+            if (is_resource($client)) { // check if not yet closed/broken etc
+                fwrite($client, $this->encode($data));
+            }
+        }
     }
 
     /**
