@@ -159,7 +159,7 @@ $client = new WebSocketClient('ws://localhost:8000/notifications/messanger/yourt
 ```
 
 ### BroadCasting
-You may wish to broadcast messages by simply calling `broadCast` method on Connection object in any method of your `ServerHandler` class:
+You may wish to broadcast messages by simply calling `broadCast` method on `Connection` object in any method of your `ServerHandler` class:
 ```php
 $conn->broadCast('hey everybody...');    
 ```

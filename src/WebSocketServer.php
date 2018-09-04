@@ -109,7 +109,8 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
                 $this->maxClients = $this->totalClients;
             }
 
-            if ($this->totalClients !== 0 // avoid 0 process creation
+            if ($this->config->isForking() === true
+                && $this->totalClients !== 0 // avoid 0 process creation
                 && true === $this->stepRecursion // only once
                 && $this->maxClients === $this->totalClients // only if stack grows
                 && $this->totalClients % $this->config->getClientsPerFork() === 0 // only when N is there

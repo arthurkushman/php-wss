@@ -13,6 +13,8 @@ class ServerConfig
     private $host = WebSocketServerContract::DEFAULT_HOST;
     private $port = WebSocketServerContract::DEFAULT_PORT;
 
+    private $isForking = true;
+
     /**
      * @return mixed
      */
@@ -75,5 +77,21 @@ class ServerConfig
     public function setPort(int $port)
     {
         $this->port = $port;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isForking(): bool
+    {
+        return $this->isForking;
+    }
+
+    /**
+     * @param bool $isForking
+     */
+    public function setForking(bool $isForking)
+    {
+        $this->isForking = $isForking;
     }
 }
