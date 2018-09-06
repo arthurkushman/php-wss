@@ -81,6 +81,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      *
      * @param resource $server server connection
      * @param bool $fork       flag to fork or run event loop
+     * @throws WebSocketException
      */
     private function eventLoop($server, bool $fork = false)
     {
