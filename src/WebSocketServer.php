@@ -98,6 +98,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
 
     /**
      * @param resource $server
+     * @throws WebSocketException
      */
     private function looping($server)
     {
@@ -137,7 +138,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
 
             //start reading and use a large timeout
             if (!stream_select($readSocks, $write, $except, $this->config->getStreamSelectTimeout())) {
-                die('something went wrong while selecting');
+                throw new WebSocketException('something went wrong while selecting');
             }
 
             //new client
