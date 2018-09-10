@@ -7,6 +7,7 @@ use WSSC\Components\ServerConfig;
 use WSSC\Contracts\CommonsContract;
 use WSSC\Contracts\WebSocket;
 use WSSC\Contracts\WebSocketServerContract;
+use WSSC\Exceptions\ConnectionException;
 use WSSC\Exceptions\WebSocketException;
 
 /**
@@ -59,6 +60,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      * Runs main process - Anscestor with server socket on TCP
      *
      * @throws WebSocketException
+     * @throws ConnectionException
      */
     public function run()
     {
@@ -68,7 +70,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
         $server = stream_socket_server("tcp://{$this->config->getHost()}:{$this->config->getPort()}", $errno, $errorMessage);
 
         if ($server === false) {
-           throw new WebSocketException('Could not bind to socket: ' . $errno . ' - ' . $errorMessage . PHP_EOL);
+           throw new WebSocketException('Could not bind to socket: ' . $errno . ' - ' . $errorMessage . PHP_EOL, CommonsContract::SERVER_COULD_NOT_BIND_TO_SOCKET);
         }
 
         @cli_set_process_title(self::PROC_TITLE);
@@ -82,6 +84,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      * @param resource $server server connection
      * @param bool $fork       flag to fork or run event loop
      * @throws WebSocketException
+     * @throws ConnectionException
      */
     private function eventLoop($server, bool $fork = false)
     {
@@ -100,6 +103,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
     /**
      * @param resource $server
      * @throws WebSocketException
+     * @throws ConnectionException
      */
     private function looping($server)
     {
@@ -139,7 +143,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
 
             //start reading and use a large timeout
             if (!stream_select($readSocks, $write, $except, $this->config->getStreamSelectTimeout())) {
-                throw new WebSocketException('something went wrong while selecting');
+                throw new WebSocketException('something went wrong while selecting', CommonsContract::SERVER_SELECT_ERROR);
             }
 
             //new client
@@ -155,6 +159,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
     /**
      * @param resource $server
      * @param array $readSocks
+     * @throws ConnectionException
      */
     private function acceptNewClient($server, array &$readSocks)
     {
@@ -319,6 +324,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      * @param resource $client Source client socket to write
      * @param string $headers  Headers that client has been sent
      * @return string   socket handshake key (Sec-WebSocket-Key)| false on parse error
+     * @throws ConnectionException
      */
     private function handshake($client, string $headers): string
     {
@@ -360,12 +366,13 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      * Retreives headers from an array of headers to upgrade server/client connection
      *
      * @return string   Headers to Upgrade communication connection
+     * @throws ConnectionException
      */
     private function getHeadersUpgrade(): string
     {
         $handShakeHeaders = self::HEADER_HTTP1_1 . self::HEADERS_EOL;
         if (empty($this->headersUpgrade)) {
-            die('Headers array is not set' . PHP_EOL);
+            throw new ConnectionException('Headers for upgrade handshake are not set' . PHP_EOL, CommonsContract::SERVER_HEADERS_NOT_SET);
         }
 
         foreach ($this->headersUpgrade as $key => $header) {

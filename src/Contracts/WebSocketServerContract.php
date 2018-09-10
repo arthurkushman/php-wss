@@ -34,7 +34,7 @@ interface WebSocketServerContract
         PAYLOAD_OFFSET_14 = 14;
 
     // limits
-    const CLIENTS_PER_FORK = 1000;
+    const CLIENTS_PER_FORK      = 1000;
     const STREAM_SELECT_TIMEOUT = 3600;
 
     public function run();

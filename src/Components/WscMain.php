@@ -64,7 +64,8 @@ class WscMain implements WscCommonsContract
 
         if ($this->socket === false) {
             throw new ConnectionException(
-                "Could not open socket to \"$host:$port\": $errstr ($errno)."
+                "Could not open socket to \"$host:$port\": $errstr ($errno).",
+                CommonsContract::CLIENT_COULD_NOT_OPEN_SOCKET
             );
         }
 
@@ -113,7 +114,8 @@ class WscMain implements WscCommonsContract
     {
         if (in_array($scheme, ['ws', 'wss'], true) === false) {
             throw new BadUriException(
-                "Url should have scheme ws or wss, not '$scheme' from URI '$this->socketUrl' ."
+                "Url should have scheme ws or wss, not '$scheme' from URI '$this->socketUrl' .",
+                CommonsContract::CLIENT_INCORRECT_SCHEME
             );
         }
 
@@ -134,14 +136,15 @@ class WscMain implements WscCommonsContract
             $address = $scheme . '://' . $host . $pathWithQuery;
             throw new ConnectionException(
                 "Connection to '{$address}' failed: Server sent invalid upgrade response:\n"
-                . $response
+                . $response, CommonsContract::CLIENT_INVALID_UPGRADE_RESPONSE
             );
         }
 
         $keyAccept = trim($matches[1]);
         $expectedResonse = base64_encode(pack('H*', sha1($key . self::SERVER_KEY_ACCEPT)));
         if ($keyAccept !== $expectedResonse) {
-            throw new ConnectionException('Server sent bad upgrade response.');
+            throw new ConnectionException('Server sent bad upgrade response.',
+                CommonsContract::CLIENT_INVALID_UPGRADE_RESPONSE);
         }
     }
 
@@ -158,7 +161,7 @@ class WscMain implements WscCommonsContract
             }
 
             throw new \InvalidArgumentException(
-                "Stream context in \$options['context'] isn't a valid context"
+                'Stream context is invalid', CommonsContract::CLIENT_INVALID_STREAM_CONTEXT
             );
         }
 
@@ -259,7 +262,8 @@ class WscMain implements WscCommonsContract
             $this->connect();
         }
         if (array_key_exists($opcode, self::$opcodes) === false) {
-            throw new BadOpcodeException("Bad opcode '$opcode'.  Try 'text' or 'binary'.");
+            throw new BadOpcodeException("Bad opcode '$opcode'.  Try 'text' or 'binary'.",
+                CommonsContract::CLIENT_BAD_OPCODE);
         }
         // record the length of the payload
         $payloadLength = strlen($payload);
@@ -387,8 +391,10 @@ class WscMain implements WscCommonsContract
         $opcode_int = ord($data[0]) & 31; // Bits 4-7
         $opcode_ints = array_flip(self::$opcodes);
         if (!array_key_exists($opcode_int, $opcode_ints)) {
-            throw new ConnectionException("Bad opcode in websocket frame: $opcode_int");
+            throw new ConnectionException("Bad opcode in websocket frame: $opcode_int",
+                CommonsContract::CLIENT_BAD_OPCODE);
         }
+
         $opcode = $opcode_ints[$opcode_int];
 
         // record the opcode if we are not receiving a continutation fragment
@@ -523,7 +529,8 @@ class WscMain implements WscCommonsContract
 
         if ($written < strlen($data)) {
             throw new ConnectionException(
-                "Could only write $written out of " . strlen($data) . ' bytes.'
+                "Could only write $written out of " . strlen($data) . ' bytes.',
+                CommonsContract::CLIENT_COULD_ONLY_WRITE_LESS
             );
         }
     }
@@ -544,14 +551,15 @@ class WscMain implements WscCommonsContract
                 throw new ConnectionException(
                     'Broken frame, read ' . strlen($data) . ' of stated '
                     . $len . ' bytes.  Stream state: '
-                    . json_encode($metadata)
+                    . json_encode($metadata), CommonsContract::CLIENT_BROKEN_FRAME
                 );
             }
 
             if ($buff === '') {
                 $metadata = stream_get_meta_data($this->socket);
                 throw new ConnectionException(
-                    'Empty read; connection dead?  Stream state: ' . json_encode($metadata)
+                    'Empty read; connection dead?  Stream state: ' . json_encode($metadata),
+                    CommonsContract::CLIENT_EMPTY_READ
                 );
             }
             $data .= $buff;
