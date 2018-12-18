@@ -19,6 +19,8 @@ class ClientConfig
     private $fragmentSize = WscCommonsContract::DEFAULT_FRAGMENT_SIZE;
     private $context;
 
+    private $contextOptions = [];
+
     /**
      * @return int
      */
@@ -161,5 +163,21 @@ class ClientConfig
     public function setPort(array $urlParts): void
     {
         $this->port = isset($urlParts['port']) ? $urlParts['port'] : ($this->scheme === 'wss' ? 443 : 80);
+    }
+
+    /**
+     * @return array
+     */
+    public function getContextOptions(): array
+    {
+        return $this->contextOptions;
+    }
+
+    /**
+     * @param array $contextOptions
+     */
+    public function setContextOptions($contextOptions)
+    {
+        $this->contextOptions = $contextOptions;
     }
 }

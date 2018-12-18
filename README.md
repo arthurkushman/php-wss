@@ -158,6 +158,13 @@ $config->setHeaders([
 $client = new WebSocketClient('ws://localhost:8000/notifications/messanger/yourtoken123', $config);
 ```
 
+You can also set particular context options for `stream_context_create` to provide them to `stream_socket_client`, for instance:
+```php
+$config = new ClientConfig();
+$config->setContextOptions(['ssl' => ['verify_peer' => false]]);
+```
+or any other available options.
+
 ### BroadCasting
 You may wish to broadcast messages by simply calling `broadCast` method on `Connection` object in any method of your `ServerHandler` class:
 ```php
