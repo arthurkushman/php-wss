@@ -3,6 +3,8 @@ Web-socket server/client with multi-process and parse templates support on serve
 
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/arthurkushman/php-wss/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/arthurkushman/php-wss/?branch=master)
 [![Build Status](https://scrutinizer-ci.com/g/arthurkushman/php-wss/badges/build.png?b=master)](https://scrutinizer-ci.com/g/arthurkushman/php-wss/build-status/master)
+[![Latest Stable Version](https://poser.pugx.org/arthurkushman/php-wss/v/stable)](https://packagist.org/packages/arthurkushman/php-wss)
+[![Total Downloads](https://poser.pugx.org/arthurkushman/php-wss/downloads)](https://packagist.org/packages/arthurkushman/php-wss)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ## Library comes with 5 main options
