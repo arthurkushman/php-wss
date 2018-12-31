@@ -5,6 +5,8 @@ namespace WSSCTEST;
 use WSSC\Contracts\ConnectionContract;
 use WSSC\Contracts\WebSocket;
 use WSSC\Exceptions\WebSocketException;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
 
 class ServerHandler extends WebSocket
 {
@@ -19,9 +21,24 @@ class ServerHandler extends WebSocket
     public $pathParams = [':entity', ':context', ':token'];
     private $clients = [];
 
+    private $log;
+
+    /**
+     * ServerHandler constructor.
+     *
+     * @throws \Exception
+     */
+    public function __construct()
+    {
+        // create a log channel
+        $this->log = new Logger('ServerSocket');
+        $this->log->pushHandler(new StreamHandler('./tests/tests.log'));
+    }
+
     public function onOpen(ConnectionContract $conn)
     {
         $this->clients[] = $conn;
+        $this->log->debug(print_r($this->clients, 1));
         echo 'Connection opend, total clients: ' . count($this->clients) . PHP_EOL;
     }
 
