@@ -46,6 +46,8 @@ to your projects composer.json.
 use WSSC\Contracts\ConnectionContract;
 use WSSC\Contracts\WebSocket;
 use WSSC\Exceptions\WebSocketException;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
 
 class ServerHandler extends WebSocket
 {
@@ -60,22 +62,36 @@ class ServerHandler extends WebSocket
     public $pathParams = [':entity', ':context', ':token'];
     private $clients = [];
 
+    private $log;
+
+    /**
+     * ServerHandler constructor.
+     *
+     * @throws \Exception
+     */
+    public function __construct()
+    {
+        // create a log channel
+        $this->log = new Logger('ServerSocket');
+        $this->log->pushHandler(new StreamHandler('./tests/tests.log'));
+    }
+
     public function onOpen(ConnectionContract $conn)
     {
-        $this->clients[] = $conn;
-        echo 'Connection opend, total clients: ' . count($this->clients) . PHP_EOL;
+        $this->clients[$conn->getUniqueSocketId()] = $conn;
+        $this->log->debug('Connection opend, total clients: ' . count($this->clients));
     }
 
     public function onMessage(ConnectionContract $recv, $msg)
     {
-        echo 'Received message:  ' . $msg . PHP_EOL;
+        $this->log->debug('Received message:  ' . $msg);
         $recv->send($msg);
     }
 
     public function onClose(ConnectionContract $conn)
     {
-        $conn->send('whatever you need');
-        unset($this->clients[array_search($conn, $this->clients)]);
+        unset($this->clients[$conn->getUniqueSocketId()]);
+        $this->log->debug('close: ' . print_r($this->clients, 1));
         $conn->close();
     }
 
@@ -90,6 +106,7 @@ class ServerHandler extends WebSocket
 
     /**
      * You may want to implement these methods to bring ping/pong events
+     *
      * @param ConnectionContract $conn
      * @param string $msg
      */
@@ -110,6 +127,7 @@ class ServerHandler extends WebSocket
 }
 
 ```
+To save clients with their unique ids - use `getUniqueSocketId()` which returns (type-casted to int) socketConnection resource id.
 
 ### Then put code bellow to Your CLI/Console script and run 
 

@@ -37,20 +37,20 @@ class ServerHandler extends WebSocket
 
     public function onOpen(ConnectionContract $conn)
     {
-        $this->clients[] = $conn;
-        $this->log->debug(print_r($this->clients, 1));
-        echo 'Connection opend, total clients: ' . count($this->clients) . PHP_EOL;
+        $this->clients[$conn->getUniqueSocketId()] = $conn;
+        $this->log->debug('Connection opened, total clients: ' . count($this->clients));
     }
 
     public function onMessage(ConnectionContract $recv, $msg)
     {
-        echo 'Received message:  ' . $msg . PHP_EOL;
+        $this->log->debug('Received message:  ' . $msg);
         $recv->send($msg);
     }
 
     public function onClose(ConnectionContract $conn)
     {
-        unset($this->clients[array_search($conn, $this->clients)]);
+        unset($this->clients[$conn->getUniqueSocketId()]);
+        $this->log->debug('close: ' . print_r($this->clients, 1));
         $conn->close();
     }
 
@@ -65,6 +65,7 @@ class ServerHandler extends WebSocket
 
     /**
      * You may want to implement these methods to bring ping/pong events
+     *
      * @param ConnectionContract $conn
      * @param string $msg
      */
