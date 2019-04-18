@@ -15,6 +15,8 @@ class ServerConfig
 
     private $isForking = true;
 
+    private $processName = WebSocketServerContract::PROC_TITLE;
+
     /**
      * @return mixed
      */
@@ -93,5 +95,21 @@ class ServerConfig
     public function setForking(bool $isForking)
     {
         $this->isForking = $isForking;
+    }
+
+    /**
+     * @return string
+     */
+    public function getProcessName(): string
+    {
+        return $this->processName;
+    }
+
+    /**
+     * @param string $processName
+     */
+    public function setProcessName(string $processName): void
+    {
+        $this->processName = $processName;
     }
 }

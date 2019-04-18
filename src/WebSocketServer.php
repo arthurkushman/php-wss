@@ -33,12 +33,11 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
     // for the very 1st time must be true
     private $stepRecursion = true;
 
-    const MAX_BYTES_READ    = 8192;
-    const HEADER_BYTES_READ = 1024;
+    private const MAX_BYTES_READ    = 8192;
+    private const HEADER_BYTES_READ = 1024;
 
     // stream non-blocking
-    const NON_BLOCK  = 0;
-    const PROC_TITLE = 'php-wss';
+    public const NON_BLOCK  = 0;
 
     /**
      * WebSocketServer constructor.
@@ -73,7 +72,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
            throw new WebSocketException('Could not bind to socket: ' . $errno . ' - ' . $errorMessage . PHP_EOL, CommonsContract::SERVER_COULD_NOT_BIND_TO_SOCKET);
         }
 
-        @cli_set_process_title(self::PROC_TITLE);
+        @cli_set_process_title($this->config->getProcessName());
         $this->eventLoop($server);
     }
 
@@ -92,7 +91,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
             $pid = pcntl_fork();
 
             if ($pid) { // run eventLoop in parent        
-                @cli_set_process_title(self::PROC_TITLE);
+                @cli_set_process_title($this->config->getProcessName());
                 $this->eventLoop($server);
             }
         } else {
