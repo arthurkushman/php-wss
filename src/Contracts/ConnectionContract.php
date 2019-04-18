@@ -9,13 +9,13 @@ namespace WSSC\Contracts;
 interface ConnectionContract
 {
 
-    public function send(string $data);
+    public function send(string $data): void;
 
-    public function close();
+    public function close(): void;
 
     public function getUniqueSocketId(): int;
 
     public function getPeerName(): string;
 
-    public function broadCast(string $data);
+    public function broadCast(string $data): void;
 }

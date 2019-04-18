@@ -29,7 +29,7 @@ class Connection implements ConnectionContract, CommonsContract
      *
      * @throws \Exception
      */
-    public function close()
+    public function close(): void
     {
         if (is_resource($this->socketConnection)) {
             fwrite($this->socketConnection, $this->encode('', self::EVENT_TYPE_CLOSE));
@@ -44,7 +44,7 @@ class Connection implements ConnectionContract, CommonsContract
      * @param string $data pure decoded data from server
      * @throws \Exception
      */
-    public function send(string $data)
+    public function send(string $data): void
     {
         fwrite($this->socketConnection, $this->encode($data));
     }
@@ -53,7 +53,7 @@ class Connection implements ConnectionContract, CommonsContract
      * @param string $data data to send to clients
      * @throws \Exception
      */
-    public function broadCast(string $data)
+    public function broadCast(string $data): void
     {
         foreach ($this->clients as $client) {
             if (is_resource($client)) { // check if not yet closed/broken etc
