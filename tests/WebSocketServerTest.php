@@ -12,6 +12,7 @@ class WebSocketServerTest extends TestCase
     /**
      * @test
      * @throws \WSSC\Exceptions\WebSocketException
+     * @throws \WSSC\Exceptions\ConnectionException
      */
     public static function is_server_running()
     {
