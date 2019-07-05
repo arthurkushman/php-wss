@@ -211,7 +211,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
                 continue;
             }
 
-            if (method_exists($this->handler, self::MAP_EVENT_TYPE_TO_METHODS[$dataType])) {
+            if ($dataType && method_exists($this->handler, self::MAP_EVENT_TYPE_TO_METHODS[$dataType])) {
                 try {
                     // dynamic call: onMessage, onPing, onPong
                     $this->handler->{self::MAP_EVENT_TYPE_TO_METHODS[$dataType]}($this->cureentConn, $dataPayload);
