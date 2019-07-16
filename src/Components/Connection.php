@@ -73,30 +73,8 @@ class Connection implements ConnectionContract, CommonsContract
      */
     private function encode($payload, string $type = self::EVENT_TYPE_TEXT, bool $masked = false)
     {
-        $frameHead = [];
+        $frameHead = $this->getOpType($type);
         $payloadLength = strlen($payload);
-
-        switch ($type) {
-            case self::EVENT_TYPE_TEXT:
-                // first byte indicates FIN, Text-Frame (10000001):
-                $frameHead[0] = self::ENCODE_TEXT;
-                break;
-
-            case self::EVENT_TYPE_CLOSE:
-                // first byte indicates FIN, Close Frame(10001000):
-                $frameHead[0] = self::ENCODE_CLOSE;
-                break;
-
-            case self::EVENT_TYPE_PING:
-                // first byte indicates FIN, Ping frame (10001001):
-                $frameHead[0] = self::ENCODE_PING;
-                break;
-
-            case self::EVENT_TYPE_PONG:
-                // first byte indicates FIN, Pong frame (10001010):
-                $frameHead[0] = self::ENCODE_PONG;
-                break;
-        }
 
         // set mask and payload length (using 1, 3 or 9 bytes)
         if ($payloadLength > self::PAYLOAD_MAX_BITS) {
@@ -125,6 +103,41 @@ class Connection implements ConnectionContract, CommonsContract
         }
 
         return $this->getComposedFrame($frameHead, $payload, $payloadLength, $masked);
+    }
+
+    /**
+     * Gets frame-head based on type of operation
+     *
+     * @param string $type  Types of operation encode-frames
+     * @return array
+     */
+    private function getOpType(string $type): array
+    {
+        $frameHead = [];
+
+        switch ($type) {
+            case self::EVENT_TYPE_TEXT:
+                // first byte indicates FIN, Text-Frame (10000001):
+                $frameHead[0] = self::ENCODE_TEXT;
+                break;
+
+            case self::EVENT_TYPE_CLOSE:
+                // first byte indicates FIN, Close Frame(10001000):
+                $frameHead[0] = self::ENCODE_CLOSE;
+                break;
+
+            case self::EVENT_TYPE_PING:
+                // first byte indicates FIN, Ping frame (10001001):
+                $frameHead[0] = self::ENCODE_PING;
+                break;
+
+            case self::EVENT_TYPE_PONG:
+                // first byte indicates FIN, Pong frame (10001010):
+                $frameHead[0] = self::ENCODE_PONG;
+                break;
+        }
+
+        return $frameHead;
     }
 
     private function getComposedFrame(array $frameHead, string $payload, int $payloadLength, bool $masked)
