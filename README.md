@@ -190,7 +190,10 @@ or any other available options see - https://www.php.net/manual/en/context.php.
 ### BroadCasting
 You may wish to broadcast messages by simply calling `broadCast` method on `Connection` object in any method of your `ServerHandler` class:
 ```php
-$conn->broadCast('hey everybody...');    
+$conn->broadCast('hey everybody...');
+
+// or to send multiple messages with 2 sec delay between them
+$conn->broadCastMany(['Hello', 'how are you today?', 'have a nice day'], 2);     
 ```
 
 ### How to test

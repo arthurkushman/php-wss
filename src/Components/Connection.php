@@ -63,6 +63,28 @@ class Connection implements ConnectionContract, CommonsContract
     }
 
     /**
+     * Broadcasting many messages with delay
+     *
+     * @param array $data   An array of messages (strings) sent to many clients
+     * @param int $delay    Time in seconds to delay between messages
+     * @throws \Exception
+     */
+    public function broadCastMany(array $data, int $delay = 0): void
+    {
+        foreach ($data as $message) {
+            foreach ($this->clients as $client) {
+                if (is_resource($client)) { // check if not yet closed/broken etc
+                    fwrite($client, $this->encode($message));
+                }
+            }
+
+            if ($delay > 0) {
+                sleep($delay);
+            }
+        }
+    }
+
+    /**
      * Encodes data before writing to the client socket stream
      *
      * @param string $payload
