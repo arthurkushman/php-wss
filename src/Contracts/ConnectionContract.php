@@ -18,4 +18,6 @@ interface ConnectionContract
     public function getPeerName(): string;
 
     public function broadCast(string $data): void;
+
+    public function broadCastMany(array $data, int $delay): void;
 }
