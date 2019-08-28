@@ -212,3 +212,6 @@ PHP7 support since version 1.3 - with types, returns and better function impleme
 
 PS U'll see the processes increase named "php-wss" as CPP (Connections Per-Process) will grow and decrease while stack will lessen. 
 For instance, if set 100 CPP and there are 128 connections - You will be able to see 2 "php-wss" processes with for ex.: `ps aux | grep php-wss`
+
+Used by:
+![alt Avito logo](https://github.com/arthurkushman/php-wss/blob/master/tests/images/avito-logo.jpg)
