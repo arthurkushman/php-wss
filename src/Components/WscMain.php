@@ -435,4 +435,10 @@ class WscMain implements WscCommonsContract
 
         return base64_encode($key);
     }
+
+
+    public function __destruct()
+    {
+        fclose($this->socket);
+    }
 }
