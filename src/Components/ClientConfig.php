@@ -2,12 +2,10 @@
 
 namespace WSSC\Components;
 
-
 use WSSC\Contracts\WscCommonsContract;
 
 class ClientConfig
 {
-
     private $scheme;
     private $host;
     private $user;
@@ -18,6 +16,12 @@ class ClientConfig
     private $headers = [];
     private $fragmentSize = WscCommonsContract::DEFAULT_FRAGMENT_SIZE;
     private $context;
+
+
+    private $has_proxy = false;
+    private $proxy_ip;
+    private $proxy_port;
+    private $proxy_auth;
 
     private $contextOptions = [];
 
@@ -179,5 +183,26 @@ class ClientConfig
     public function setContextOptions($contextOptions)
     {
         $this->contextOptions = $contextOptions;
+    }
+
+    public function setProxy($ip, $port, $username = '', $password = '')
+    {
+        $this->has_proxy = true;
+        $this->proxy_ip = $ip;
+        $this->proxy_port = $port;
+        $this->proxy_auth = ($username && $password) ? base64_encode($username.':'.$password) : null;
+    }
+
+    public function getProxy(&$ip, &$port, &$auth)
+    {
+        if (!$this->has_proxy) {
+            return false;
+        }
+
+        $ip   = $this->proxy_ip;
+        $port = $this->proxy_port;
+        $auth = $this->proxy_auth;
+
+        return true;
     }
 }
