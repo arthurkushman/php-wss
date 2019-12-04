@@ -1,6 +1,6 @@
 {
-    "name": "arthurkushman/php-wss",
-    "description": "Web-socket server with URI parse and multi-process support",
+    "name": "mnashmi/php-wss",
+    "description": "Forked Web-socket server with URI parse and multi-process and PROXY support",
     "keywords": [
         "web-sockets",
         "web socket server",
@@ -11,7 +11,7 @@
         "php"
     ],
     "license": "MIT",
-    "homepage": "https://github.com/arthurkushman/php-wss",
+    "homepage": "https://github.com/mnashmi/php-wss",
     "require": {
         "php": ">=7.1",
         "ext-pcntl": "*"
