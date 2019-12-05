@@ -17,7 +17,6 @@ use WSSC\Exceptions\ConnectionException;
  */
 class WscMain implements WscCommonsContract
 {
-
     use WSClientTrait;
 
     private $socket;
@@ -60,10 +59,25 @@ class WscMain implements WscCommonsContract
 
         // Set the stream context options if they're already set in the config
         $context = $this->getStreamContext();
-        $this->socket = @stream_socket_client(
-            $hostUri . ':' . $this->config->getPort(), $errno, $errstr, $this->config->getTimeout(),
-            STREAM_CLIENT_CONNECT, $context
-        );
+
+
+        if ($this->config->hasProxy()){
+            $this->socket = $this->proxy(
+                $this->config->getHost(),
+                $this->config->getProxyIp(),
+                $this->config->getProxyPort(),
+                $this->config->getProxyAuth()
+            );
+        } else {
+            $this->socket = @stream_socket_client(
+                $hostUri . ':' . $this->config->getPort(),
+                $errno,
+                $errstr,
+                $this->config->getTimeout(),
+                STREAM_CLIENT_CONNECT,
+                $context
+            );
+        }
 
         if ($this->socket === false) {
             throw new ConnectionException(
@@ -107,20 +121,51 @@ class WscMain implements WscCommonsContract
         $this->isConnected = true;
     }
 
+
+    private function proxy($host, $ip, $port, $auth)
+    {
+        // Set the stream context options if they're already set in the config
+        $context = $this->getStreamContext();
+        $sock = @stream_socket_client(
+            "tcp://$ip:$port",
+            $errno,
+            $errstr,
+            $this->config->getTimeout(),
+            STREAM_CLIENT_CONNECT,
+            $context
+        );
+
+        $write =  "CONNECT $host HTTP/1.1\r\n";
+        if ($auth) {
+            $write .= "Proxy-Authorization: Basic $auth\r\n";
+        }
+        $write .= "\r\n";
+        fwrite($sock, $write);
+        $rsp = fread($sock, 1024);
+
+        if (preg_match('/^HTTP\/\d\.\d 200/', $rsp) == 1) {
+            return $sock;
+        } else {
+            throw new \Exception("Failed to connect to the host via proxy");
+        }
+    }
+
+
     /**
      * @return mixed|resource
      * @throws \InvalidArgumentException
      */
     private function getStreamContext()
     {
-        if ($this->config->getContext() !== NULL) {
+        if ($this->config->getContext() !== null) {
             // Suppress the error since we'll catch it below
             if (@get_resource_type($this->config->getContext()) === 'stream-context') {
                 return $this->config->getContext();
             }
 
             throw new \InvalidArgumentException(
-                'Stream context is invalid', CommonsContract::CLIENT_INVALID_STREAM_CONTEXT
+                'Stream context is invalid',
+                CommonsContract::CLIENT_INVALID_STREAM_CONTEXT
             );
         }
 
@@ -156,10 +201,13 @@ class WscMain implements WscCommonsContract
     {
         return 'GET ' . $pathWithQuery . " HTTP/1.1\r\n"
             . implode(
-                "\r\n", array_map(
+                "\r\n",
+                array_map(
                     function ($key, $value) {
                         return "$key: $value";
-                    }, array_keys($headers), $headers
+                    },
+                    array_keys($headers),
+                    $headers
                 )
             )
             . "\r\n\r\n";
@@ -194,7 +242,7 @@ class WscMain implements WscCommonsContract
      * @param null $microSecs
      * @return WscMain
      */
-    public function setTimeout(int $timeout, $microSecs = NULL): WscMain
+    public function setTimeout(int $timeout, $microSecs = null): WscMain
     {
         $this->config->setTimeout($timeout);
         if ($this->socket && get_resource_type($this->socket) === 'stream') {
@@ -221,8 +269,10 @@ class WscMain implements WscCommonsContract
             $this->connect();
         }
         if (array_key_exists($opcode, self::$opcodes) === false) {
-            throw new BadOpcodeException("Bad opcode '$opcode'.  Try 'text' or 'binary'.",
-                CommonsContract::CLIENT_BAD_OPCODE);
+            throw new BadOpcodeException(
+                "Bad opcode '$opcode'.  Try 'text' or 'binary'.",
+                CommonsContract::CLIENT_BAD_OPCODE
+            );
         }
         // record the length of the payload
         $payloadLength = strlen($payload);
@@ -264,8 +314,8 @@ class WscMain implements WscCommonsContract
         }
         $this->hugePayload = '';
 
-        $response = NULL;
-        while (NULL === $response) {
+        $response = null;
+        while (null === $response) {
             $response = $this->receiveFragment();
         }
 
@@ -331,7 +381,8 @@ class WscMain implements WscCommonsContract
                 throw new ConnectionException(
                     'Broken frame, read ' . strlen($data) . ' of stated '
                     . $len . ' bytes.  Stream state: '
-                    . json_encode($metadata), CommonsContract::CLIENT_BROKEN_FRAME
+                    . json_encode($metadata),
+                    CommonsContract::CLIENT_BROKEN_FRAME
                 );
             }
 
@@ -381,5 +432,11 @@ class WscMain implements WscCommonsContract
         }
 
         return base64_encode($key);
+    }
+
+
+    public function __destruct()
+    {
+        fclose($this->socket);
     }
 }
