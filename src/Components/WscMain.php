@@ -61,13 +61,13 @@ class WscMain implements WscCommonsContract
         $context = $this->getStreamContext();
 
 
-        //do we have a proxy?
-        $proxy_ip   = '';
-        $proxy_port = '';
-        $proxy_auth = '';
-
-        if ($this->config->getProxy($proxy_ip, $proxy_port, $proxy_auth)) {
-            $this->socket = $this->proxy($this->config->getHost(), $proxy_ip, $proxy_port, $proxy_auth);
+        if ($this->config->hasProxy()){
+            $this->socket = $this->proxy(
+                $this->config->getHost(),
+                $this->config->getProxyIp(),
+                $this->config->getProxyPort(),
+                $this->config->getProxyAuth()
+            );
         } else {
             $this->socket = @stream_socket_client(
                 $hostUri . ':' . $this->config->getPort(),
@@ -78,8 +78,6 @@ class WscMain implements WscCommonsContract
                 $context
             );
         }
-
-
 
         if ($this->socket === false) {
             throw new ConnectionException(

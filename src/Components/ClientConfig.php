@@ -18,10 +18,10 @@ class ClientConfig
     private $context;
 
 
-    private $has_proxy = false;
-    private $proxy_ip;
-    private $proxy_port;
-    private $proxy_auth;
+    private $hasProxy = false;
+    private $proxyIp;
+    private $proxyPort;
+    private $proxyAuth;
 
     private $contextOptions = [];
 
@@ -187,22 +187,30 @@ class ClientConfig
 
     public function setProxy($ip, $port, $username = '', $password = '')
     {
-        $this->has_proxy = true;
-        $this->proxy_ip = $ip;
-        $this->proxy_port = $port;
-        $this->proxy_auth = ($username && $password) ? base64_encode($username.':'.$password) : null;
+        $this->hasProxy  = true;
+        $this->proxyIp   = $ip;
+        $this->proxyPort = $port;
+        $this->proxyAuth = ($username && $password) ? base64_encode($username.':'.$password) : null;
     }
 
-    public function getProxy(&$ip, &$port, &$auth)
+    public function hasProxy() : bool
     {
-        if (!$this->has_proxy) {
-            return false;
-        }
-
-        $ip   = $this->proxy_ip;
-        $port = $this->proxy_port;
-        $auth = $this->proxy_auth;
-
-        return true;
+        return $this->hasProxy;
     }
+
+    public function getProxyIp() : ?string
+    {
+        return ($this->hasProxy) ? $this->proxyIp : null;
+    }
+
+    public function getProxyPort() : ?string
+    {
+        return ($this->hasProxy) ? $this->proxyPort : null;
+    }
+
+    public function getProxyAuth() : ?string
+    {
+        return ($this->hasProxy) ? $this->proxyAuth : null;
+    }
+
 }
