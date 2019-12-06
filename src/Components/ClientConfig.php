@@ -2,12 +2,10 @@
 
 namespace WSSC\Components;
 
-
 use WSSC\Contracts\WscCommonsContract;
 
 class ClientConfig
 {
-
     private $scheme;
     private $host;
     private $user;
@@ -18,6 +16,12 @@ class ClientConfig
     private $headers = [];
     private $fragmentSize = WscCommonsContract::DEFAULT_FRAGMENT_SIZE;
     private $context;
+
+    // proxy settings
+    private $hasProxy = false;
+    private $proxyIp;
+    private $proxyPort;
+    private $proxyAuth;
 
     private $contextOptions = [];
 
@@ -162,7 +166,7 @@ class ClientConfig
      */
     public function setPort(array $urlParts): void
     {
-        $this->port = isset($urlParts['port']) ? $urlParts['port'] : ($this->scheme === 'wss' ? 443 : 80);
+        $this->port = isset($urlParts['port']) ? $urlParts['port'] : ($this->scheme === 'wss' ? '443' : '80');
     }
 
     /**
@@ -176,8 +180,62 @@ class ClientConfig
     /**
      * @param array $contextOptions
      */
-    public function setContextOptions($contextOptions)
+    public function setContextOptions($contextOptions): void
     {
         $this->contextOptions = $contextOptions;
+    }
+
+    /**
+     * @param string $ip
+     * @param string $port
+     */
+    public function setProxy(string $ip, string $port): void
+    {
+        $this->hasProxy  = true;
+        $this->proxyIp   = $ip;
+        $this->proxyPort = $port;
+    }
+
+    /**
+     * Sets auth for proxy
+     *
+     * @param string $userName
+     * @param string $password
+     */
+    public function setProxyAuth(string $userName, string $password): void
+    {
+        $this->proxyAuth = (empty($userName) === false && empty($password) === false) ? base64_encode($userName.':'.$password) : null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasProxy() : bool
+    {
+        return $this->hasProxy;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getProxyIp() : ?string
+    {
+        return $this->proxyIp;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getProxyPort() : ?string
+    {
+        return $this->proxyPort;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getProxyAuth() : ?string
+    {
+        return $this->proxyAuth;
     }
 }

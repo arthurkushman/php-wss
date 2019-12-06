@@ -28,7 +28,7 @@ class ServerConfig
     /**
      * @param mixed $clientsPerFork
      */
-    public function setClientsPerFork(int $clientsPerFork)
+    public function setClientsPerFork(int $clientsPerFork): void
     {
         $this->clientsPerFork = $clientsPerFork;
     }
@@ -44,7 +44,7 @@ class ServerConfig
     /**
      * @param mixed $streamSelectTimeout
      */
-    public function setStreamSelectTimeout(int $streamSelectTimeout)
+    public function setStreamSelectTimeout(int $streamSelectTimeout): void
     {
         $this->streamSelectTimeout = $streamSelectTimeout;
     }
@@ -60,7 +60,7 @@ class ServerConfig
     /**
      * @param string $host
      */
-    public function setHost(string $host)
+    public function setHost(string $host): void
     {
         $this->host = $host;
     }
@@ -76,7 +76,7 @@ class ServerConfig
     /**
      * @param int $port
      */
-    public function setPort(int $port)
+    public function setPort(int $port): void
     {
         $this->port = $port;
     }
@@ -92,7 +92,7 @@ class ServerConfig
     /**
      * @param bool $isForking
      */
-    public function setForking(bool $isForking)
+    public function setForking(bool $isForking): void
     {
         $this->isForking = $isForking;
     }

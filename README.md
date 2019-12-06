@@ -10,13 +10,14 @@ Web-socket server/client with multi-process and parse templates support on serve
 ## Library comes with 6 main options
 Server:
 - it`s a web-socket server for multiple connections with decoding/encoding for all events out of the box (with Dependency Injected MessageHandler)
-- it has GET uri parser, so You can easily use any templates 
+- it has GET uri parser, so You can easily use any templates
 - multiple process per user connections support, so You can fork processes to speed up performance deciding how many client-connections should be there
 - broadcasting message(s) to all clients
 
-Client: 
+Client:
 - You have the ability to handshake (which is performed automatically) and send messages to server
 - Receive a response from the server
+- Initiate connection via proxy
 
 ## How do I get set up?
 
@@ -28,13 +29,13 @@ perform command in shell
  composer require arthurkushman/php-wss
 ```
 
-OR 
+OR
 
-just add 
+just add
 
 ```javascript
 "require": {
-  "arthurkushman/php-wss": ">=1.3"  
+  "arthurkushman/php-wss": ">=1.3"
 }
 ```
 
@@ -55,7 +56,7 @@ class ServerHandler extends WebSocket
 
     /*
      *  if You need to parse URI context like /messanger/chat/JKN324jn4213
-     *  You can do so by placing URI parts into an array - $pathParams, when Socket will receive a connection 
+     *  You can do so by placing URI parts into an array - $pathParams, when Socket will receive a connection
      *  this variable will be appropriately set to key => value pairs, ex.: ':context' => 'chat'
      *  Otherwise leave $pathParams as an empty array
      */
@@ -130,7 +131,7 @@ class ServerHandler extends WebSocket
 ```
 To save clients with their unique ids - use `getUniqueSocketId()` which returns (type-casted to int) socketConnection resource id.
 
-### Then put code bellow to Your CLI/Console script and run 
+### Then put code bellow to Your CLI/Console script and run
 
 ```php
 <?php
@@ -176,6 +177,10 @@ $config->setHeaders([
     'X-Custom-Header' => 'Foo Bar Baz',
 ]);
 
+// if proxy settings is of need
+$config->setProxy('127.0.0.1', '80');
+$config->setProxyAuth('proxyUser', 'proxyPass');
+
 $client = new WebSocketClient('ws://localhost:8000/notifications/messanger/yourtoken123', $config);
 ```
 If it is of need to send ssl requests just set `wss` scheme to constructors url param of `WebSocketClient` - it will be passed and used as ssl automatically.
@@ -193,7 +198,7 @@ You may wish to broadcast messages by simply calling `broadCast` method on `Conn
 $conn->broadCast('hey everybody...');
 
 // or to send multiple messages with 2 sec delay between them
-$conn->broadCastMany(['Hello', 'how are you today?', 'have a nice day'], 2);     
+$conn->broadCastMany(['Hello', 'how are you today?', 'have a nice day'], 2);
 ```
 
 ### How to test
@@ -208,9 +213,9 @@ To run the Client - execute in another console:
 phpunit --bootstrap ./tests/_bootstrap.php ./tests/WebSocketClientTest.php
 ```
 
-PHP7 support since version 1.3 - with types, returns and better function implementations. 
+PHP7 support since version 1.3 - with types, returns and better function implementations.
 
-PS U'll see the processes increase named "php-wss" as CPP (Connections Per-Process) will grow and decrease while stack will lessen. 
+PS U'll see the processes increase named "php-wss" as CPP (Connections Per-Process) will grow and decrease while stack will lessen.
 For instance, if set 100 CPP and there are 128 connections - You will be able to see 2 "php-wss" processes with for ex.: `ps aux | grep php-wss`
 
 Used by:

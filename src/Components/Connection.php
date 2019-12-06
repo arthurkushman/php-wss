@@ -162,6 +162,14 @@ class Connection implements ConnectionContract, CommonsContract
         return $frameHead;
     }
 
+    /**
+     * @param array $frameHead
+     * @param string $payload
+     * @param int $payloadLength
+     * @param bool $masked
+     * @return string
+     * @throws \Exception
+     */
     private function getComposedFrame(array $frameHead, string $payload, int $payloadLength, bool $masked)
     {
         // convert frame-head to string:
