@@ -22,7 +22,6 @@ trait WSClientTrait
     {
         $response = stream_get_line($this->socket, self::DEFAULT_RESPONSE_HEADER, "\r\n\r\n");
         if (!preg_match(self::SEC_WEBSOCKET_ACCEPT_PTTRN, $response, $matches)) {
-            print_r($response);
             $address = $config->getScheme() . '://' . $config->getHost() . ':' . $config->getPort() . $pathWithQuery;
             throw new ConnectionException(
                 "Connection to '{$address}' failed: Server sent invalid upgrade response:\n"
