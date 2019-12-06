@@ -62,7 +62,7 @@ class WscMain implements WscCommonsContract
 
 
         if ($this->config->hasProxy()) {
-            $this->socket = $this->proxy($this->config);
+            $this->socket = $this->proxy();
         } else {
             $this->socket = @stream_socket_client(
                 $hostUri . ':' . $this->config->getPort(),
@@ -120,15 +120,14 @@ class WscMain implements WscCommonsContract
     /**
      * Init a proxy connection
      *
-     * @param ClientConfig $config
      * @return bool|resource
      * @throws \InvalidArgumentException
      * @throws \WSSC\Exceptions\ConnectionException
      */
-    private function proxy(ClientConfig $config)
+    private function proxy()
     {
         $sock = @stream_socket_client(
-            WscCommonsContract::TCP_SCHEME . $config->getProxyIp() . ':' . $config->getProxyPort(),
+            WscCommonsContract::TCP_SCHEME . $this->config->getProxyIp() . ':' . $this->config->getProxyPort(),
             $errno,
             $errstr,
             $this->config->getTimeout(),
@@ -136,8 +135,8 @@ class WscMain implements WscCommonsContract
             $this->getStreamContext()
         );
 
-        $write = "CONNECT {$config->getHost()} HTTP/1.1\r\n";
-        $auth = $config->getProxyAuth();
+        $write = "CONNECT {$this->config->getHost()} HTTP/1.1\r\n";
+        $auth = $this->config->getProxyAuth();
         if ($auth !== NULL) {
             $write .= "Proxy-Authorization: Basic {$auth}\r\n";
         }
