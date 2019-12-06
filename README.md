@@ -17,6 +17,7 @@ Server:
 Client:
 - You have the ability to handshake (which is performed automatically) and send messages to server
 - Receive a response from the server
+- Initiate connection via proxy
 
 ## How do I get set up?
 
@@ -175,7 +176,10 @@ $config->setTimeout(15);
 $config->setHeaders([
     'X-Custom-Header' => 'Foo Bar Baz',
 ]);
-$config->setProxy('127.0.0.1', '80', 'proxy_user', 'proxy_pass');
+
+// if proxy settings is of need
+$config->setProxy('127.0.0.1', '80');
+$config->setProxyAuth('proxyUser', 'proxyPass');
 
 $client = new WebSocketClient('ws://localhost:8000/notifications/messanger/yourtoken123', $config);
 ```

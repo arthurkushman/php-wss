@@ -1,6 +1,6 @@
 {
     "name": "arthurkushman/php-wss",
-    "description": "Web-socket server with URI parse and multi-process and PROXY support",
+    "description": "Web-socket server with URI parse and multi-process support",
     "keywords": [
         "web-sockets",
         "web socket server",

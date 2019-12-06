@@ -61,13 +61,8 @@ class WscMain implements WscCommonsContract
         $context = $this->getStreamContext();
 
 
-        if ($this->config->hasProxy()){
-            $this->socket = $this->proxy(
-                $this->config->getHost(),
-                $this->config->getProxyIp(),
-                $this->config->getProxyPort(),
-                $this->config->getProxyAuth()
-            );
+        if ($this->config->hasProxy()) {
+            $this->socket = $this->proxy($this->config);
         } else {
             $this->socket = @stream_socket_client(
                 $hostUri . ':' . $this->config->getPort(),
@@ -122,32 +117,39 @@ class WscMain implements WscCommonsContract
     }
 
 
-    private function proxy($host, $ip, $port, $auth)
+    /**
+     * Init a proxy connection
+     *
+     * @param ClientConfig $config
+     * @return bool|resource
+     * @throws \InvalidArgumentException
+     * @throws \WSSC\Exceptions\ConnectionException
+     */
+    private function proxy(ClientConfig $config)
     {
-        // Set the stream context options if they're already set in the config
-        $context = $this->getStreamContext();
         $sock = @stream_socket_client(
-            "tcp://$ip:$port",
+            WscCommonsContract::TCP_SCHEME . $config->getProxyIp() . ':' . $config->getProxyPort(),
             $errno,
             $errstr,
             $this->config->getTimeout(),
             STREAM_CLIENT_CONNECT,
-            $context
+            $this->getStreamContext()
         );
 
-        $write =  "CONNECT $host HTTP/1.1\r\n";
-        if ($auth) {
-            $write .= "Proxy-Authorization: Basic $auth\r\n";
+        $write = "CONNECT {$config->getHost()} HTTP/1.1\r\n";
+        $auth = $config->getProxyAuth();
+        if ($auth !== NULL) {
+            $write .= "Proxy-Authorization: Basic {$auth}\r\n";
         }
         $write .= "\r\n";
         fwrite($sock, $write);
-        $rsp = fread($sock, 1024);
+        $resp = fread($sock, 1024);
 
-        if (preg_match('/^HTTP\/\d\.\d 200/', $rsp) == 1) {
+        if (preg_match('/^HTTP\/\d\.\d 200/', $resp) === 1) {
             return $sock;
-        } else {
-            throw new \Exception("Failed to connect to the host via proxy");
         }
+
+        throw new ConnectionException('Failed to connect to the host via proxy');
     }
 
 
@@ -315,7 +317,7 @@ class WscMain implements WscCommonsContract
         $this->hugePayload = '';
 
         $response = null;
-        while (null === $response) {
+        while ($response === null) {
             $response = $this->receiveFragment();
         }
 
@@ -432,11 +434,5 @@ class WscMain implements WscCommonsContract
         }
 
         return base64_encode($key);
-    }
-
-
-    public function __destruct()
-    {
-        fclose($this->socket);
     }
 }

@@ -9,6 +9,8 @@ namespace WSSC\Contracts;
 interface WscCommonsContract
 {
 
+    public const TCP_SCHEME = 'tcp://';
+
     public const MAX_BYTES_READ             = 65535;
     public const DEFAULT_TIMEOUT            = 5;
     public const DEFAULT_FRAGMENT_SIZE      = 4096;
