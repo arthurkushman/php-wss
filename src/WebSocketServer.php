@@ -29,6 +29,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
     private $maxClients = 1;
     private $handler;
     private $cureentConn;
+    private $isPcntlLoaded = false;
 
     // for the very 1st time must be true
     private $stepRecursion = true;
@@ -53,6 +54,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
 
         $this->handler = $handler;
         $this->config = $config;
+        $this->setIsPcntlLoaded(extension_loaded('pcntl'));
     }
 
     /**
@@ -87,7 +89,7 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
      */
     private function eventLoop($server, bool $fork = false)
     {
-        if ($fork === true) {
+        if ($fork === true && $this->isPcntlLoaded()) {
             $pid = pcntl_fork();
 
             if ($pid) { // run eventLoop in parent        
@@ -411,5 +413,23 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
                 $left = substr($left, strpos($left, '/', 1));
             }
         }
+    }
+
+    /**
+     * Returns true if pcntl ext loaded and false otherwise
+     * @return bool
+     */
+    private function isPcntlLoaded(): bool
+    {
+        return $this->isPcntlLoaded;
+    }
+
+    /**
+     * Sets pre-loaded pcntl state
+     * @param bool $isPcntlLoaded
+     */
+    private function setIsPcntlLoaded(bool $isPcntlLoaded): void
+    {
+        $this->isPcntlLoaded = $isPcntlLoaded;
     }
 }
