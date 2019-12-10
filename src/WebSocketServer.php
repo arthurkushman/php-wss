@@ -4,6 +4,7 @@ namespace WSSC;
 
 use WSSC\Components\Connection;
 use WSSC\Components\ServerConfig;
+use WSSC\Components\WssMain;
 use WSSC\Contracts\CommonsContract;
 use WSSC\Contracts\WebSocket;
 use WSSC\Contracts\WebSocketServerContract;
@@ -16,7 +17,7 @@ use WSSC\Exceptions\WebSocketException;
  * @property ServerConfig config
  * @property WebSocket handler
  */
-class WebSocketServer implements WebSocketServerContract, CommonsContract
+class WebSocketServer extends WssMain implements WebSocketServerContract
 {
 
     private $clients = [];
@@ -29,7 +30,6 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
     private $maxClients = 1;
     private $handler;
     private $cureentConn;
-    private $isPcntlLoaded = false;
 
     // for the very 1st time must be true
     private $stepRecursion = true;
@@ -116,12 +116,12 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
                 $this->maxClients = $this->totalClients;
             }
 
-            if ($this->config->isForking() === true
+            $doFork = $this->config->isForking() === true
                 && $this->totalClients !== 0 // avoid 0 process creation
-                && true === $this->stepRecursion // only once
+                && $this->stepRecursion === true // only once
                 && $this->maxClients === $this->totalClients // only if stack grows
-                && $this->totalClients % $this->config->getClientsPerFork() === 0 // only when N is there
-            ) {
+                && $this->totalClients % $this->config->getClientsPerFork() === 0; // only when N is there
+            if ($doFork) {
                 $this->stepRecursion = false;
                 $this->eventLoop($server, true);
             }
@@ -225,101 +225,6 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
     }
 
     /**
-     * Message frames decoder
-     *
-     * @param string $data
-     * @return mixed null on empty data|false on improper data|array - on success
-     */
-    private function decode(string $data)
-    {
-        if (empty($data)) {
-            return NULL; // close has been sent
-        }
-
-        $unmaskedPayload = '';
-        $decodedData = [];
-
-        // estimate frame type:
-        $firstByteBinary = sprintf('%08b', ord($data[0]));
-        $secondByteBinary = sprintf('%08b', ord($data[1]));
-        $opcode = bindec(substr($firstByteBinary, 4, 4));
-        $isMasked = $secondByteBinary[0] === '1';
-        $payloadLength = ord($data[1]) & self::MASK_127;
-
-        // unmasked frame is received:
-        if (!$isMasked) {
-            return ['type' => '', 'payload' => '', 'error' => self::ERR_PROTOCOL];
-        }
-
-        switch ($opcode) {
-            // text frame:
-            case self::DECODE_TEXT:
-                $decodedData['type'] = self::EVENT_TYPE_TEXT;
-                break;
-            case self::DECODE_BINARY:
-                $decodedData['type'] = self::EVENT_TYPE_BINARY;
-                break;
-            // connection close frame:
-            case self::DECODE_CLOSE:
-                $decodedData['type'] = self::EVENT_TYPE_CLOSE;
-                break;
-            // ping frame:
-            case self::DECODE_PING:
-                $decodedData['type'] = self::EVENT_TYPE_PING;
-                break;
-            // pong frame:
-            case self::DECODE_PONG:
-                $decodedData['type'] = self::EVENT_TYPE_PONG;
-                break;
-            default:
-                return ['type' => '', 'payload' => '', 'error' => self::ERR_UNKNOWN_OPCODE];
-        }
-
-        if ($payloadLength === self::MASK_126) {
-            $mask = substr($data, 4, 4);
-            $payloadOffset = self::PAYLOAD_OFFSET_8;
-            $dataLength = bindec(sprintf('%08b', ord($data[2])) . sprintf('%08b', ord($data[3]))) + $payloadOffset;
-        } elseif ($payloadLength === self::MASK_127) {
-            $mask = substr($data, 10, 4);
-            $payloadOffset = self::PAYLOAD_OFFSET_14;
-            $tmp = '';
-            for ($i = 0; $i < 8; $i++) {
-                $tmp .= sprintf('%08b', ord($data[$i + 2]));
-            }
-            $dataLength = bindec($tmp) + $payloadOffset;
-            unset($tmp);
-        } else {
-            $mask = substr($data, 2, 4);
-            $payloadOffset = self::PAYLOAD_OFFSET_6;
-            $dataLength = $payloadLength + $payloadOffset;
-        }
-
-        /**
-         * We have to check for large frames here. socket_recv cuts at 1024 bytes
-         * so if websocket-frame is > 1024 bytes we have to wait until whole
-         * data is transferd.
-         */
-        if (strlen($data) < $dataLength) {
-            return false;
-        }
-
-        if ($isMasked) {
-            for ($i = $payloadOffset; $i < $dataLength; $i++) {
-                $j = $i - $payloadOffset;
-                if (isset($data[$i])) {
-                    $unmaskedPayload .= $data[$i] ^ $mask[$j % 4];
-                }
-            }
-            $decodedData['payload'] = $unmaskedPayload;
-        } else {
-            $payloadOffset -= 4;
-            $decodedData['payload'] = substr($data, $payloadOffset);
-        }
-
-        return $decodedData;
-    }
-
-    /**
      * Handshakes/upgrade and key parse
      *
      * @param resource $client Source client socket to write
@@ -413,23 +318,5 @@ class WebSocketServer implements WebSocketServerContract, CommonsContract
                 $left = substr($left, strpos($left, '/', 1));
             }
         }
-    }
-
-    /**
-     * Returns true if pcntl ext loaded and false otherwise
-     * @return bool
-     */
-    private function isPcntlLoaded(): bool
-    {
-        return $this->isPcntlLoaded;
-    }
-
-    /**
-     * Sets pre-loaded pcntl state
-     * @param bool $isPcntlLoaded
-     */
-    private function setIsPcntlLoaded(bool $isPcntlLoaded): void
-    {
-        $this->isPcntlLoaded = $isPcntlLoaded;
     }
 }
