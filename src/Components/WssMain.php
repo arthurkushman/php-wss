@@ -35,7 +35,6 @@ class WssMain implements CommonsContract
         // estimate frame type:
         $firstByteBinary = sprintf('%08b', ord($data[0]));
         $secondByteBinary = sprintf('%08b', ord($data[1]));
-        $opcode = bindec(substr($firstByteBinary, 4, 4));
         $isMasked = $secondByteBinary[0] === '1';
         $payloadLength = ord($data[1]) & self::MASK_127;
 
@@ -44,30 +43,14 @@ class WssMain implements CommonsContract
             return ['type' => '', 'payload' => '', 'error' => WebSocketServerContract::ERR_PROTOCOL];
         }
 
-        switch ($opcode) {
-            // text frame:
-            case self::DECODE_TEXT:
-                $decodedData['type'] = self::EVENT_TYPE_TEXT;
-                break;
-            case self::DECODE_BINARY:
-                $decodedData['type'] = self::EVENT_TYPE_BINARY;
-                break;
-            // connection close frame:
-            case self::DECODE_CLOSE:
-                $decodedData['type'] = self::EVENT_TYPE_CLOSE;
-                break;
-            // ping frame:
-            case self::DECODE_PING:
-                $decodedData['type'] = self::EVENT_TYPE_PING;
-                break;
-            // pong frame:
-            case self::DECODE_PONG:
-                $decodedData['type'] = self::EVENT_TYPE_PONG;
-                break;
-            default:
-                return ['type' => '', 'payload' => '', 'error' => WebSocketServerContract::ERR_UNKNOWN_OPCODE];
+        $this->getTypeByOpCode($firstByteBinary, $decodedData);
+        if (empty($decodedData['type'])) {
+            return ['type' => '', 'payload' => '', 'error' => WebSocketServerContract::ERR_UNKNOWN_OPCODE];
         }
 
+        $mask = substr($data, 2, 4);
+        $payloadOffset = WebSocketServerContract::PAYLOAD_OFFSET_6;
+        $dataLength = $payloadLength + $payloadOffset;
         if ($payloadLength === self::MASK_126) {
             $mask = substr($data, 4, 4);
             $payloadOffset = WebSocketServerContract::PAYLOAD_OFFSET_8;
@@ -81,10 +64,6 @@ class WssMain implements CommonsContract
             }
             $dataLength = bindec($tmp) + $payloadOffset;
             unset($tmp);
-        } else {
-            $mask = substr($data, 2, 4);
-            $payloadOffset = WebSocketServerContract::PAYLOAD_OFFSET_6;
-            $dataLength = $payloadLength + $payloadOffset;
         }
 
         /**
@@ -128,5 +107,34 @@ class WssMain implements CommonsContract
     protected function setIsPcntlLoaded(bool $isPcntlLoaded): void
     {
         $this->isPcntlLoaded = $isPcntlLoaded;
+    }
+
+    private function getTypeByOpCode(string $firstByteBinary, array &$decodedData)
+    {
+        $opcode = bindec(substr($firstByteBinary, 4, 4));
+        switch ($opcode) {
+            // text frame:
+            case self::DECODE_TEXT:
+                $decodedData['type'] = self::EVENT_TYPE_TEXT;
+                break;
+            case self::DECODE_BINARY:
+                $decodedData['type'] = self::EVENT_TYPE_BINARY;
+                break;
+            // connection close frame:
+            case self::DECODE_CLOSE:
+                $decodedData['type'] = self::EVENT_TYPE_CLOSE;
+                break;
+            // ping frame:
+            case self::DECODE_PING:
+                $decodedData['type'] = self::EVENT_TYPE_PING;
+                break;
+            // pong frame:
+            case self::DECODE_PONG:
+                $decodedData['type'] = self::EVENT_TYPE_PONG;
+                break;
+            default:
+                $decodedData['type'] = '';
+                break;
+        }
     }
 }
