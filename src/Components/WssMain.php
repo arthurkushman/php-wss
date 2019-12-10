@@ -109,6 +109,11 @@ class WssMain implements CommonsContract
         $this->isPcntlLoaded = $isPcntlLoaded;
     }
 
+    /**
+     * Detects decode data type
+     * @param string $firstByteBinary
+     * @param array $decodedData
+     */
     private function getTypeByOpCode(string $firstByteBinary, array &$decodedData)
     {
         $opcode = bindec(substr($firstByteBinary, 4, 4));
