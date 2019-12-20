@@ -134,8 +134,7 @@ class WscMain implements WscCommonsContract
             STREAM_CLIENT_CONNECT,
             $this->getStreamContext()
         );
-
-        $write = "CONNECT {$this->config->getHost()} HTTP/1.1\r\n";
+        $write = "CONNECT {$this->config->getProxyIp()}:{$this->config->getProxyPort()} HTTP/1.1\r\n";
         $auth = $this->config->getProxyAuth();
         if ($auth !== NULL) {
             $write .= "Proxy-Authorization: Basic {$auth}\r\n";
@@ -144,7 +143,7 @@ class WscMain implements WscCommonsContract
         fwrite($sock, $write);
         $resp = fread($sock, 1024);
 
-        if (preg_match('/^HTTP\/\d\.\d 200/', $resp) === 1) {
+        if (preg_match(self::PROXY_MATCH_RESP, $resp) === 1) {
             return $sock;
         }
 
