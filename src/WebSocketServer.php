@@ -38,7 +38,7 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
     private const HEADER_BYTES_READ = 1024;
 
     // stream non-blocking
-    public const NON_BLOCK  = 0;
+    public const NON_BLOCK = 0;
 
     /**
      * WebSocketServer constructor.
@@ -65,13 +65,15 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
      */
     public function run()
     {
-        $errno = NULL;
+        $errno = null;
         $errorMessage = '';
 
-        $server = stream_socket_server("tcp://{$this->config->getHost()}:{$this->config->getPort()}", $errno, $errorMessage);
+        $server = stream_socket_server("tcp://{$this->config->getHost()}:{$this->config->getPort()}", $errno,
+            $errorMessage);
 
         if ($server === false) {
-           throw new WebSocketException('Could not bind to socket: ' . $errno . ' - ' . $errorMessage . PHP_EOL, CommonsContract::SERVER_COULD_NOT_BIND_TO_SOCKET);
+            throw new WebSocketException('Could not bind to socket: ' . $errno . ' - ' . $errorMessage . PHP_EOL,
+                CommonsContract::SERVER_COULD_NOT_BIND_TO_SOCKET);
         }
 
         @cli_set_process_title($this->config->getProcessName());
@@ -144,7 +146,8 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
 
             //start reading and use a large timeout
             if (!stream_select($readSocks, $write, $except, $this->config->getStreamSelectTimeout())) {
-                throw new WebSocketException('something went wrong while selecting', CommonsContract::SERVER_SELECT_ERROR);
+                throw new WebSocketException('something went wrong while selecting',
+                    CommonsContract::SERVER_SELECT_ERROR);
             }
 
             //new client
@@ -195,30 +198,32 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
     {
         foreach ($readSocks as $kSock => $sock) {
             $data = $this->decode(fread($sock, self::MAX_BYTES_READ));
-            $dataType = $data['type'];
-            $dataPayload = $data['payload'];
+            if ($data !== null) {
+                $dataType = $data['type'];
+                $dataPayload = $data['payload'];
 
-            // to manipulate connection through send/close methods via handler, specified in IConnection
-            $this->cureentConn = new Connection($sock, $this->clients);
-            if (empty($data) || $dataType === self::EVENT_TYPE_CLOSE) { // close event triggered from client - browser tab or close socket event
-                // trigger CLOSE event
-                try {
-                    $this->handler->onClose($this->cureentConn);
-                } catch (WebSocketException $e) {
-                    $e->printStack();
+                // to manipulate connection through send/close methods via handler, specified in IConnection
+                $this->cureentConn = new Connection($sock, $this->clients);
+                if (empty($data) || $dataType === self::EVENT_TYPE_CLOSE) { // close event triggered from client - browser tab or close socket event
+                    // trigger CLOSE event
+                    try {
+                        $this->handler->onClose($this->cureentConn);
+                    } catch (WebSocketException $e) {
+                        $e->printStack();
+                    }
+
+                    // to avoid event leaks
+                    unset($this->clients[array_search($sock, $this->clients)], $readSocks[$kSock]);
+                    continue;
                 }
 
-                // to avoid event leaks
-                unset($this->clients[array_search($sock, $this->clients)], $readSocks[$kSock]);
-                continue;
-            }
-
-            if (method_exists($this->handler, self::MAP_EVENT_TYPE_TO_METHODS[$dataType])) {
-                try {
-                    // dynamic call: onMessage, onPing, onPong
-                    $this->handler->{self::MAP_EVENT_TYPE_TO_METHODS[$dataType]}($this->cureentConn, $dataPayload);
-                } catch (WebSocketException $e) {
-                    $e->printStack();
+                if (method_exists($this->handler, self::MAP_EVENT_TYPE_TO_METHODS[$dataType])) {
+                    try {
+                        // dynamic call: onMessage, onPing, onPong
+                        $this->handler->{self::MAP_EVENT_TYPE_TO_METHODS[$dataType]}($this->cureentConn, $dataPayload);
+                    } catch (WebSocketException $e) {
+                        $e->printStack();
+                    }
                 }
             }
         }
@@ -278,7 +283,8 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
     {
         $handShakeHeaders = self::HEADER_HTTP1_1 . self::HEADERS_EOL;
         if (empty($this->headersUpgrade)) {
-            throw new ConnectionException('Headers for upgrade handshake are not set' . PHP_EOL, CommonsContract::SERVER_HEADERS_NOT_SET);
+            throw new ConnectionException('Headers for upgrade handshake are not set' . PHP_EOL,
+                CommonsContract::SERVER_HEADERS_NOT_SET);
         }
 
         foreach ($this->headersUpgrade as $key => $header) {

@@ -9,12 +9,14 @@ use WSSC\Contracts\WebSocketServerContract;
 
 /**
  * Class WssMain
+ *
  * @package WSSC\Components
  *
  * @property ServerConfig config
  */
 class WssMain implements CommonsContract
 {
+
     private $isPcntlLoaded = false;
 
     /**
@@ -26,7 +28,7 @@ class WssMain implements CommonsContract
     protected function decode(string $data)
     {
         if (empty($data)) {
-            return NULL; // close has been sent
+            return null; // close has been sent
         }
 
         $unmaskedPayload = '';
@@ -93,6 +95,7 @@ class WssMain implements CommonsContract
 
     /**
      * Returns true if pcntl ext loaded and false otherwise
+     *
      * @return bool
      */
     protected function isPcntlLoaded(): bool
@@ -102,6 +105,7 @@ class WssMain implements CommonsContract
 
     /**
      * Sets pre-loaded pcntl state
+     *
      * @param bool $isPcntlLoaded
      */
     protected function setIsPcntlLoaded(bool $isPcntlLoaded): void
@@ -111,6 +115,7 @@ class WssMain implements CommonsContract
 
     /**
      * Detects decode data type
+     *
      * @param string $firstByteBinary
      * @param array $decodedData
      */

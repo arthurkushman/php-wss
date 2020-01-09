@@ -59,8 +59,6 @@ class WscMain implements WscCommonsContract
 
         // Set the stream context options if they're already set in the config
         $context = $this->getStreamContext();
-
-
         if ($this->config->hasProxy()) {
             $this->socket = $this->proxy();
         } else {
