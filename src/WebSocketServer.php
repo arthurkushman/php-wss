@@ -20,10 +20,11 @@ use WSSC\Exceptions\WebSocketException;
  */
 class WebSocketServer extends WssMain implements WebSocketServerContract
 {
+    protected $config;
+
     private $clients = [];
     // set any template You need ex.: GET /subscription/messenger/token
     private $pathParams = [];
-    private $config;
     private $handshakes = [];
     private $headersUpgrade = [];
     private $totalClients = 0;
@@ -128,22 +129,12 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
                 $this->stepRecursion = false;
                 $this->eventLoop($server, true);
             }
-
-            if ($this->totalClients !== 0 && $this->maxClients > $this->totalClients
-                && $this->totalClients % $this->config->getClientsPerFork() === 0) { // there is less connection for amount of processes at this moment
-                exit(1);
-            }
+            $this->lessConnThanProc($this->totalClients, $this->maxClients);
 
             //prepare readable sockets
             $readSocks = $this->clients;
             $readSocks[] = $server;
-
-            // clear socket resources that were closed, thus avoiding (stream_select(): supplied resource is not a valid stream resource)
-            foreach ($readSocks as $k => $sock) {
-                if (!is_resource($sock)) {
-                    unset($readSocks[$k]);
-                }
-            }
+            $this->cleanSocketResources($readSocks);
 
             //start reading and use a large timeout
             if (!stream_select($readSocks, $write, $except, $this->config->getStreamSelectTimeout())) {

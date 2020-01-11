@@ -146,4 +146,31 @@ class WssMain implements CommonsContract
                 break;
         }
     }
+
+    /**
+     * Checks if there are less connections for amount of processes
+     * @param int $totalClients
+     * @param int $maxClients
+     */
+    protected function lessConnThanProc(int $totalClients, int $maxClients): void
+    {
+        if ($totalClients !== 0 && $maxClients > $totalClients
+            && $totalClients % $this->config->getClientsPerFork() === 0) {
+            exit(1);
+        }
+    }
+
+    /**
+     * Clean socket resources that were closed,
+     * thus avoiding (stream_select(): supplied resource is not a valid stream resource)
+     * @param array $readSocks
+     */
+    protected function cleanSocketResources(array &$readSocks): void
+    {
+        foreach ($readSocks as $k => $sock) {
+            if (!is_resource($sock)) {
+                unset($readSocks[$k]);
+            }
+        }
+    }
 }
