@@ -6,7 +6,6 @@ use WSSC\Contracts\WebSocketServerContract;
 
 class ServerConfig
 {
-
     private $clientsPerFork = WebSocketServerContract::CLIENTS_PER_FORK;
     private $streamSelectTimeout = WebSocketServerContract::STREAM_SELECT_TIMEOUT;
 
@@ -16,6 +15,10 @@ class ServerConfig
     private $isForking = true;
 
     private $processName = WebSocketServerContract::PROC_TITLE;
+
+    private $checkOrigin = false;
+    private $origins = [];
+    private $originHeader = false;
 
     /**
      * @return mixed
@@ -111,5 +114,56 @@ class ServerConfig
     public function setProcessName(string $processName): void
     {
         $this->processName = $processName;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isCheckOrigin(): bool
+    {
+        return $this->checkOrigin;
+    }
+
+    /**
+     * @param bool $checkOrigin
+     */
+    public function setCheckOrigin(bool $checkOrigin): void
+    {
+        $this->checkOrigin = $checkOrigin;
+    }
+
+    /**
+     * @return array
+     */
+    public function getOrigins(): array
+    {
+        return $this->origins;
+    }
+
+    /**
+     * @param array $origins
+     */
+    public function setOrigins(array $origins): void
+    {
+        if (empty($origins) === false) {
+            $this->setCheckOrigin(true);
+        }
+        $this->origins = $origins;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isOriginHeader(): bool
+    {
+        return $this->originHeader;
+    }
+
+    /**
+     * @param bool $originHeader
+     */
+    public function setOriginHeader(bool $originHeader): void
+    {
+        $this->originHeader = $originHeader;
     }
 }

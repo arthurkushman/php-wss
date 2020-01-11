@@ -9,11 +9,10 @@ use WSSC\WebSocketClient;
 
 class WebSocketClientTest extends TestCase
 {
-
     private const WS_SCHEME = 'ws://';
-    private const WS_HOST   = 'localhost';
-    private const WS_PORT   = ':8000';
-    private const WS_URI    = '/notifications/messanger/vkjsndfvjn23243';
+    private const WS_HOST = 'localhost';
+    private const WS_PORT = ':8000';
+    private const WS_URI = '/notifications/messanger/vkjsndfvjn23243';
 
     private $url;
 
@@ -50,6 +49,7 @@ class WebSocketClientTest extends TestCase
         $config->setTimeout(15);
         $config->setHeaders([
             'X-Custom-Header' => 'Foo Bar Baz',
+//            'Origin' => 'example.com'
         ]);
 
         $recvMsg = '{"user_id" : 123}';

@@ -8,7 +8,6 @@ use WSSC\Contracts\WebSocketServerContract;
 
 class Connection implements ConnectionContract, CommonsContract
 {
-
     private $socketConnection;
     private $clients;
 
@@ -65,8 +64,8 @@ class Connection implements ConnectionContract, CommonsContract
     /**
      * Broadcasting many messages with delay
      *
-     * @param array $data   An array of messages (strings) sent to many clients
-     * @param int $delay    Time in seconds to delay between messages
+     * @param array $data An array of messages (strings) sent to many clients
+     * @param int $delay Time in seconds to delay between messages
      * @throws \Exception
      */
     public function broadCastMany(array $data, int $delay = 0): void
@@ -110,9 +109,9 @@ class Connection implements ConnectionContract, CommonsContract
             // most significant bit MUST be 0
             if ($frameHead[2] > self::MASK_127) {
                 return [
-                    'type'    => $type,
+                    'type' => $type,
                     'payload' => $payload,
-                    'error'   => WebSocketServerContract::ERR_FRAME_TOO_LARGE,
+                    'error' => WebSocketServerContract::ERR_FRAME_TOO_LARGE,
                 ];
             }
         } elseif ($payloadLength > self::MASK_125) {
@@ -130,7 +129,7 @@ class Connection implements ConnectionContract, CommonsContract
     /**
      * Gets frame-head based on type of operation
      *
-     * @param string $type  Types of operation encode-frames
+     * @param string $type Types of operation encode-frames
      * @return array
      */
     private function getOpType(string $type): array

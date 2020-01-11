@@ -8,7 +8,6 @@ use WSSC\WebSocketServer;
 
 class WebSocketServerTest extends TestCase
 {
-
     /**
      * @test
      * @throws \WSSC\Exceptions\WebSocketException

@@ -8,7 +8,6 @@ namespace WSSC\Contracts;
  */
 interface ConnectionContract
 {
-
     public function send(string $data): void;
 
     public function close(): void;

@@ -9,7 +9,6 @@ use WSSC\Exceptions\ConnectionException;
 
 trait WSClientTrait
 {
-
     /**
      * Validates whether server sent valid upgrade response
      *

@@ -8,7 +8,6 @@ namespace WSSC\Contracts;
  */
 interface WebSocketServerContract
 {
-
     // HOST/PORT
     public const DEFAULT_HOST = '0.0.0.0';
     public const DEFAULT_PORT = 8000;

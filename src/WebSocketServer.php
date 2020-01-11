@@ -3,6 +3,7 @@
 namespace WSSC;
 
 use WSSC\Components\Connection;
+use WSSC\Components\OriginComponent;
 use WSSC\Components\ServerConfig;
 use WSSC\Components\WssMain;
 use WSSC\Contracts\CommonsContract;
@@ -19,7 +20,6 @@ use WSSC\Exceptions\WebSocketException;
  */
 class WebSocketServer extends WssMain implements WebSocketServerContract
 {
-
     private $clients = [];
     // set any template You need ex.: GET /subscription/messenger/token
     private $pathParams = [];
@@ -34,7 +34,7 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
     // for the very 1st time must be true
     private $stepRecursion = true;
 
-    private const MAX_BYTES_READ    = 8192;
+    private const MAX_BYTES_READ = 8192;
     private const HEADER_BYTES_READ = 1024;
 
     // stream non-blocking
@@ -49,7 +49,8 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
     public function __construct(
         WebSocket $handler,
         ServerConfig $config
-    ) {
+    )
+    {
         ini_set('default_socket_timeout', 5); // this should be >= 5 sec, otherwise there will be broken pipe - tested
 
         $this->handler = $handler;
@@ -85,7 +86,7 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
      * and when forks equals true which prevents it from infinite recursive iterations
      *
      * @param resource $server server connection
-     * @param bool $fork       flag to fork or run event loop
+     * @param bool $fork flag to fork or run event loop
      * @throws WebSocketException
      * @throws ConnectionException
      */
@@ -153,6 +154,9 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
             //new client
             if (in_array($server, $readSocks, false)) {
                 $this->acceptNewClient($server, $readSocks);
+                if ($this->config->isCheckOrigin() && $this->config->isOriginHeader() === false) {
+                    continue;
+                }
             }
 
             //message from existing client
@@ -169,9 +173,16 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
     {
         $newClient = stream_socket_accept($server, 0); // must be 0 to non-block
         if ($newClient) {
-
             // important to read from headers here coz later client will change and there will be only msgs on pipe
             $headers = fread($newClient, self::HEADER_BYTES_READ);
+            if ($this->config->isCheckOrigin()) {
+                $hasOrigin = (new OriginComponent($this->config, $newClient))->checkOrigin($headers);
+                $this->config->setOriginHeader($hasOrigin);
+                if ($hasOrigin === false) {
+                    return;
+                }
+            }
+
             if (empty($this->handler->pathParams[0]) === false) {
                 $this->setPathParams($headers);
             }
@@ -189,10 +200,10 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
     }
 
     /**
-     * @uses onMessage
+     * @param array $readSocks
      * @uses onPing
      * @uses onPong
-     * @param array $readSocks
+     * @uses onMessage
      */
     private function messagesWorker(array $readSocks)
     {
@@ -233,7 +244,7 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
      * Handshakes/upgrade and key parse
      *
      * @param resource $client Source client socket to write
-     * @param string $headers  Headers that client has been sent
+     * @param string $headers Headers that client has been sent
      * @return string   socket handshake key (Sec-WebSocket-Key)| false on parse error
      * @throws ConnectionException
      */
@@ -266,8 +277,8 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
     private function setHeadersUpgrade($secWebSocketAccept)
     {
         $this->headersUpgrade = [
-            self::HEADERS_UPGRADE_KEY              => self::HEADERS_UPGRADE_VALUE,
-            self::HEADERS_CONNECTION_KEY           => self::HEADERS_CONNECTION_VALUE,
+            self::HEADERS_UPGRADE_KEY => self::HEADERS_UPGRADE_VALUE,
+            self::HEADERS_CONNECTION_KEY => self::HEADERS_CONNECTION_VALUE,
             self::HEADERS_SEC_WEBSOCKET_ACCEPT_KEY => ' ' . $secWebSocketAccept
             // the space before key is really important
         ];

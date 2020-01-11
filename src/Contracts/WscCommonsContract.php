@@ -8,7 +8,6 @@ namespace WSSC\Contracts;
  */
 interface WscCommonsContract
 {
-
     public const TCP_SCHEME = 'tcp://';
 
     public const MAX_BYTES_READ             = 65535;

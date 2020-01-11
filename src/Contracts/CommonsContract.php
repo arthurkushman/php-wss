@@ -8,7 +8,6 @@ namespace WSSC\Contracts;
  */
 interface CommonsContract
 {
-
     // DADA types
     public const EVENT_TYPE_PING         = 'ping';
     public const EVENT_TYPE_PONG         = 'pong';

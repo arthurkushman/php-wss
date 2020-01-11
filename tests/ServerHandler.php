@@ -10,7 +10,6 @@ use Monolog\Handler\StreamHandler;
 
 class ServerHandler extends WebSocket
 {
-
     /*
      *  if You need to parse URI context like /messanger/chat/JKN324jn4213
      *  You can do so by placing URI parts into an array - $pathParams, when Socket will receive a connection 

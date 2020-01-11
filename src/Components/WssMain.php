@@ -16,7 +16,6 @@ use WSSC\Contracts\WebSocketServerContract;
  */
 class WssMain implements CommonsContract
 {
-
     private $isPcntlLoaded = false;
 
     /**

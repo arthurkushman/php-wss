@@ -41,7 +41,7 @@ just add
 
 to your projects composer.json.
 
-### Implement Your WebSocket handler class - ex.:
+### Implement your WebSocket handler class - ex.:
 
 ```php
 <?php
@@ -200,6 +200,16 @@ $conn->broadCast('hey everybody...');
 // or to send multiple messages with 2 sec delay between them
 $conn->broadCastMany(['Hello', 'how are you today?', 'have a nice day'], 2);
 ```
+
+### Origin check
+To let server check the Origin header with `n` hosts provided:
+```php
+$config = new ServerConfig();
+$config->setOrigins(["example.com", "otherexample.com"]);
+$websocketServer = new WebSocketServer(new ServerHandler(), $config);
+$websocketServer->run();
+```
+Server will automatically check those hosts proceeding to listen for other connections even if some failed to pass check.
 
 ### How to test
 
