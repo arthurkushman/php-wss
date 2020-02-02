@@ -38,9 +38,6 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
     private const MAX_BYTES_READ = 8192;
     private const HEADER_BYTES_READ = 1024;
 
-    // stream non-blocking
-    public const NON_BLOCK = 0;
-
     /**
      * WebSocketServer constructor.
      *
