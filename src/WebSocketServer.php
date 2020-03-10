@@ -216,7 +216,9 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
                     continue;
                 }
 
-                if (method_exists($this->handler, self::MAP_EVENT_TYPE_TO_METHODS[$dataType])) {
+                $isSupportedMethod = empty(self::MAP_EVENT_TYPE_TO_METHODS[$dataType]) === false
+                    && method_exists($this->handler, self::MAP_EVENT_TYPE_TO_METHODS[$dataType]);
+                if ($isSupportedMethod) {
                     try {
                         // dynamic call: onMessage, onPing, onPong
                         $this->handler->{self::MAP_EVENT_TYPE_TO_METHODS[$dataType]}($this->cureentConn, $dataPayload);
