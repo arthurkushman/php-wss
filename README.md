@@ -7,12 +7,13 @@ Web-socket server/client with multi-process and parse templates support on serve
 [![Total Downloads](https://poser.pugx.org/arthurkushman/php-wss/downloads)](https://packagist.org/packages/arthurkushman/php-wss)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-## Library comes with 7 main options
+## Library comes with several main options
 Server:
 - it`s a web-socket server for multiple connections with decoding/encoding for all events out of the box (with Dependency Injected MessageHandler)
 - it has GET uri parser, so You can easily use any templates
 - multiple process per user connections support, so You can fork processes to speed up performance deciding how many client-connections should be there
 - broadcasting message(s) to all clients
+- origin check
 
 Client:
 - You have the ability to handshake (which is performed automatically) and send messages to server
