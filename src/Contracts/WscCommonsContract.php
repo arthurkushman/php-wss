@@ -13,7 +13,7 @@ interface WscCommonsContract
     public const MAX_BYTES_READ             = 65535;
     public const DEFAULT_TIMEOUT            = 5;
     public const DEFAULT_FRAGMENT_SIZE      = 4096;
-    public const DEFAULT_RESPONSE_HEADER    = 1024;
+    public const DEFAULT_RESPONSE_HEADER    = 8192;
     public const SEC_WEBSOCKET_ACCEPT_PTTRN = '/Sec-WebSocket-Accept:\s(.*)$/mUi';
     public const SERVER_KEY_ACCEPT          = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
     public const PROXY_MATCH_RESP           = '/^HTTP\/\d\.\d 200/';
