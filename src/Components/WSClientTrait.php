@@ -29,8 +29,8 @@ trait WSClientTrait
         }
 
         $keyAccept = trim($matches[1]);
-        $expectedResonse = base64_encode(pack('H*', sha1($key . self::SERVER_KEY_ACCEPT)));
-        if ($keyAccept !== $expectedResonse) {
+        $expectedResponse = base64_encode(pack('H*', sha1($key . self::SERVER_KEY_ACCEPT)));
+        if ($keyAccept !== $expectedResponse) {
             throw new ConnectionException('Server sent bad upgrade response.',
                 CommonsContract::CLIENT_INVALID_UPGRADE_RESPONSE);
         }
@@ -129,14 +129,14 @@ trait WSClientTrait
         $final = (bool)(ord($data[0]) & 1 << 7);
 
         // Parse opcode
-        $opcode_int = ord($data[0]) & 31; // Bits 4-7
-        $opcode_ints = array_flip(self::$opcodes);
-        if (!array_key_exists($opcode_int, $opcode_ints)) {
-            throw new ConnectionException("Bad opcode in websocket frame: $opcode_int",
+        $opcodeInt = ord($data[0]) & 31; // Bits 4-7
+        $opcodeInts = array_flip(self::$opcodes);
+        if (!array_key_exists($opcodeInt, $opcodeInts)) {
+            throw new ConnectionException("Bad opcode in websocket frame: $opcodeInt",
                 CommonsContract::CLIENT_BAD_OPCODE);
         }
 
-        $opcode = $opcode_ints[$opcode_int];
+        $opcode = $opcodeInts[$opcodeInt];
 
         // record the opcode if we are not receiving a continutation fragment
         if ($opcode !== 'continuation') {

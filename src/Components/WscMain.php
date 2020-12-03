@@ -335,13 +335,13 @@ class WscMain implements WscCommonsContract
     public function close(int $status = 1000, string $message = 'ttfn')
     {
         $statusBin = sprintf('%016b', $status);
-        $status_str = '';
+        $statusStr = '';
 
         foreach (str_split($statusBin, 8) as $binstr) {
-            $status_str .= chr(bindec($binstr));
+            $statusStr .= chr(bindec($binstr));
         }
 
-        $this->send($status_str . $message, CommonsContract::EVENT_TYPE_CLOSE);
+        $this->send($statusStr . $message, CommonsContract::EVENT_TYPE_CLOSE);
         $this->isClosing = true;
 
         return $this->receive(); // Receiving a close frame will close the socket now.
