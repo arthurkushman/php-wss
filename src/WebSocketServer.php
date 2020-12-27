@@ -64,11 +64,27 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
      */
     public function run()
     {
+        $context = stream_context_create();
         $errno = null;
         $errorMessage = '';
 
+        if ($this->config->isSsl() === true) {
+            stream_context_set_option($context, 'ssl', 'allow_self_signed', $this->config->getAllowSelfSigned());
+            stream_context_set_option($context, 'ssl', 'verify_peer', false);
+
+            if (is_file($this->config->getLocalCert()) === false || is_file($this->config->getLocalPk()) === false) {
+                throw new WebSocketException('SSL certificates must be valid pem files', CommonsContract::SERVER_INVALID_STREAM_CONTEXT);
+            }
+            $isLocalCertSet = stream_context_set_option($context, 'ssl', 'local_cert', $this->config->getLocalCert());
+            $isLocalPkSet = stream_context_set_option($context, 'ssl', 'local_pk', $this->config->getLocalPk());
+
+            if ($isLocalCertSet === false || $isLocalPkSet === false) {
+                throw new WebSocketException('SSL certificates could not be set correctly', CommonsContract::SERVER_INVALID_STREAM_CONTEXT);
+            }
+        }
+
         $server = stream_socket_server("tcp://{$this->config->getHost()}:{$this->config->getPort()}", $errno,
-            $errorMessage);
+            $errorMessage, STREAM_SERVER_BIND | STREAM_SERVER_LISTEN, $context);
 
         if ($server === false) {
             throw new WebSocketException('Could not bind to socket: ' . $errno . ' - ' . $errorMessage . PHP_EOL,
@@ -107,7 +123,7 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
      * @throws WebSocketException
      * @throws ConnectionException
      */
-    private function looping($server)
+    private function looping($server): void
     {
         while (true) {
             $this->totalClients = count($this->clients) + 1;
@@ -157,10 +173,17 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
      * @param array $readSocks
      * @throws ConnectionException
      */
-    private function acceptNewClient($server, array &$readSocks)
+    private function acceptNewClient($server, array &$readSocks): void
     {
         $newClient = stream_socket_accept($server, 0); // must be 0 to non-block
         if ($newClient) {
+            if ($this->config->isSsl() === true) {
+                $isEnabled = stream_socket_enable_crypto($newClient, true, $this->config->getCryptoType());
+                if ($isEnabled === false) { // couldn't enable crypto - let's try one more time
+                    return;
+                }
+            }
+
             // important to read from headers here coz later client will change and there will be only msgs on pipe
             $headers = fread($newClient, self::HEADER_BYTES_READ);
             if ($this->config->isCheckOrigin()) {
@@ -193,7 +216,7 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
      * @uses onPong
      * @uses onMessage
      */
-    private function messagesWorker(array $readSocks)
+    private function messagesWorker(array $readSocks): void
     {
         foreach ($readSocks as $kSock => $sock) {
             $data = $this->decode(fread($sock, self::MAX_BYTES_READ));
@@ -303,7 +326,7 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
      *
      * @param string $headers
      */
-    private function setPathParams(string $headers)
+    private function setPathParams(string $headers): void
     {
         if (empty($this->handler->pathParams) === false) {
             $matches = [];
