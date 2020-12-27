@@ -10,10 +10,11 @@ Web-socket server/client with multi-process and parse templates support on serve
 ## Library comes with several main options
 Server:
 - it`s a web-socket server for multiple connections with decoding/encoding for all events out of the box (with Dependency Injected MessageHandler)
-- it has GET uri parser, so You can easily use any templates
-- multiple process per user connections support, so You can fork processes to speed up performance deciding how many client-connections should be there
+- it has GET uri parser, so you can easily use any templates
+- multiple process per user connections support, so you can fork processes to speed up performance deciding how many client-connections should be there
 - broadcasting message(s) to all clients
 - origin check
+- ssl server run
 
 Client:
 - You have the ability to handshake (which is performed automatically) and send messages to server
@@ -211,6 +212,21 @@ $websocketServer = new WebSocketServer(new ServerHandler(), $config);
 $websocketServer->run();
 ```
 Server will automatically check those hosts proceeding to listen for other connections even if some failed to pass check.
+
+### SSL Server run options
+```php
+use WSSC\Components\ServerConfig;
+use WSSC\WebSocketServer;
+
+$config = new ServerConfig();
+$config->setIsSsl(true)->setAllowSelfSigned(true)
+    ->setCryptoType(STREAM_CRYPTO_METHOD_SSLv23_SERVER)
+    ->setLocalCert("./tests/certs/cert.pem")->setLocalPk("./tests/certs/key.pem")
+    ->setPort(8888);
+
+$websocketServer = new WebSocketServer(new ServerHandler(), $config);
+$websocketServer->run();
+```
 
 ### How to test
 
