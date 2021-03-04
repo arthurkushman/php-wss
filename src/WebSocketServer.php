@@ -13,30 +13,54 @@ use WSSC\Exceptions\ConnectionException;
 use WSSC\Exceptions\WebSocketException;
 
 /**
- * Create by Arthur Kushman
- *
- * @property ServerConfig config
- * @property WebSocket handler
+ * Class WebSocketServer
+ * @package WSSC
  */
 class WebSocketServer extends WssMain implements WebSocketServerContract
 {
-    protected $config;
-
-    private $clients = [];
-    // set any template You need ex.: GET /subscription/messenger/token
-    private $pathParams = [];
-    private $handshakes = [];
-    private $headersUpgrade = [];
-    private $totalClients = 0;
-    private $maxClients = 1;
-    private $handler;
-    private $cureentConn;
-
-    // for the very 1st time must be true
-    private $stepRecursion = true;
-
     private const MAX_BYTES_READ = 8192;
     private const HEADER_BYTES_READ = 1024;
+
+    /**
+     * @var ServerConfig
+     */
+    protected ServerConfig $config;
+
+    /**
+     * @var array
+     */
+    private array $clients = [];
+
+    /**
+     * set any template You need ex.: GET /subscription/messenger/token
+     * @var array
+     */
+    private array $pathParams = [];
+
+    /**
+     * @var array
+     */
+    private array $handshakes = [];
+
+    /**
+     * @var array
+     */
+    private array $headersUpgrade = [];
+
+    /**
+     * @var int
+     */
+    private int $maxClients = 1;
+
+    /**
+     * @var WebSocket
+     */
+    private WebSocket $handler;
+
+    /**
+     * @var bool
+     */
+    private bool $stepRecursion = true;
 
     /**
      * WebSocketServer constructor.
@@ -126,23 +150,23 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
     private function looping($server): void
     {
         while (true) {
-            $this->totalClients = count($this->clients) + 1;
+            $totalClients = count($this->clients) + 1;
 
             // maxClients prevents process fork on count down
-            if ($this->totalClients > $this->maxClients) {
-                $this->maxClients = $this->totalClients;
+            if ($totalClients > $this->maxClients) {
+                $this->maxClients = $totalClients;
             }
 
             $doFork = $this->config->isForking() === true
-                && $this->totalClients !== 0 // avoid 0 process creation
+                && $totalClients !== 0 // avoid 0 process creation
                 && $this->stepRecursion === true // only once
-                && $this->maxClients === $this->totalClients // only if stack grows
-                && $this->totalClients % $this->config->getClientsPerFork() === 0; // only when N is there
+                && $this->maxClients === $totalClients // only if stack grows
+                && $totalClients % $this->config->getClientsPerFork() === 0; // only when N is there
             if ($doFork) {
                 $this->stepRecursion = false;
                 $this->eventLoop($server, true);
             }
-            $this->lessConnThanProc($this->totalClients, $this->maxClients);
+            $this->lessConnThanProc($totalClients, $this->maxClients);
 
             //prepare readable sockets
             $readSocks = $this->clients;
@@ -225,11 +249,11 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
                 $dataPayload = $data['payload'];
 
                 // to manipulate connection through send/close methods via handler, specified in IConnection
-                $this->cureentConn = new Connection($sock, $this->clients);
+                $cureentConn = new Connection($sock, $this->clients);
                 if (empty($data) || $dataType === self::EVENT_TYPE_CLOSE) { // close event triggered from client - browser tab or close socket event
                     // trigger CLOSE event
                     try {
-                        $this->handler->onClose($this->cureentConn);
+                        $this->handler->onClose($cureentConn);
                     } catch (WebSocketException $e) {
                         $e->printStack();
                     }
@@ -244,7 +268,7 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
                 if ($isSupportedMethod) {
                     try {
                         // dynamic call: onMessage, onPing, onPong
-                        $this->handler->{self::MAP_EVENT_TYPE_TO_METHODS[$dataType]}($this->cureentConn, $dataPayload);
+                        $this->handler->{self::MAP_EVENT_TYPE_TO_METHODS[$dataType]}($cureentConn, $dataPayload);
                     } catch (WebSocketException $e) {
                         $e->printStack();
                     }
