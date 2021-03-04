@@ -119,7 +119,7 @@ trait WSClientTrait
      * @throws ConnectionException
      * @throws \Exception
      */
-    protected function receiveFragment()
+    protected function receiveFragment(): ?string
     {
         // Just read the main fragment information first.
         $data = $this->read(2);

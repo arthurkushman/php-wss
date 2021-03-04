@@ -11,10 +11,26 @@ use WSSC\Contracts\WscCommonsContract;
 class ClientConfig
 {
     private $scheme;
-    private $host;
-    private $user;
-    private $password;
-    private $port;
+
+    /**
+     * @var string
+     */
+    private string $host;
+
+    /**
+     * @var string
+     */
+    private string $user;
+
+    /**
+     * @var string
+     */
+    private string $password;
+
+    /**
+     * @var string
+     */
+    private string $port;
 
     private $timeout = WscCommonsContract::DEFAULT_TIMEOUT;
     private $headers = [];
@@ -128,10 +144,10 @@ class ClientConfig
     }
 
     /**
-     * @param void $host
+     * @param string $host
      * @return ClientConfig
      */
-    public function setHost($host): ClientConfig
+    public function setHost(string $host): ClientConfig
     {
         $this->host = $host;
         return $this;
@@ -165,6 +181,7 @@ class ClientConfig
 
     /**
      * @param array $urlParts
+     * @return ClientConfig
      */
     public function setPassword(array $urlParts): ClientConfig
     {
@@ -182,6 +199,7 @@ class ClientConfig
 
     /**
      * @param array $urlParts
+     * @return ClientConfig
      */
     public function setPort(array $urlParts): ClientConfig
     {

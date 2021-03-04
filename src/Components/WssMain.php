@@ -16,7 +16,7 @@ use WSSC\Contracts\WebSocketServerContract;
  */
 class WssMain implements CommonsContract
 {
-    private $isPcntlLoaded = false;
+    private bool $isPcntlLoaded = false;
 
     /**
      * Message frames decoder

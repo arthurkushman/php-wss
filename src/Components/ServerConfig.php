@@ -9,73 +9,73 @@ class ServerConfig
     /**
      * @var int
      */
-    private $clientsPerFork = WebSocketServerContract::CLIENTS_PER_FORK;
+    private int $clientsPerFork = WebSocketServerContract::CLIENTS_PER_FORK;
 
     /**
      * @var int
      */
-    private $streamSelectTimeout = WebSocketServerContract::STREAM_SELECT_TIMEOUT;
+    private int $streamSelectTimeout = WebSocketServerContract::STREAM_SELECT_TIMEOUT;
 
     /**
      * @var string
      */
-    private $host = WebSocketServerContract::DEFAULT_HOST;
+    private string $host = WebSocketServerContract::DEFAULT_HOST;
 
     /**
      * @var int
      */
-    private $port = WebSocketServerContract::DEFAULT_PORT;
+    private int $port = WebSocketServerContract::DEFAULT_PORT;
 
     /**
      * @var bool
      */
-    private $isForking = true;
+    private bool $isForking = true;
 
     /**
      * @var string
      */
-    private $processName = WebSocketServerContract::PROC_TITLE;
+    private string $processName = WebSocketServerContract::PROC_TITLE;
 
     /**
      * @var bool
      */
-    private $checkOrigin = false;
+    private bool $checkOrigin = false;
 
     /**
      * @var array
      */
-    private $origins = [];
+    private array $origins = [];
 
 
     /**
      * @var bool
      */
-    private $originHeader = false;
+    private bool $originHeader = false;
 
     /**
      * @var bool
      */
-    private $isSsl = false;
+    private bool $isSsl = false;
 
     /**
      * @var string
      */
-    private $localCert;
+    private string $localCert;
 
     /**
      * @var string
      */
-    private $localPk;
+    private string $localPk;
 
     /**
      * @var bool
      */
-    private $allowSelfSigned;
+    private bool $allowSelfSigned;
 
     /**
      * @var int
      */
-    private $cryptoType;
+    private int $cryptoType;
 
     /**
      * @return mixed
@@ -159,6 +159,7 @@ class ServerConfig
 
     /**
      * @param bool $isForking
+     * @return ServerConfig
      */
     public function setForking(bool $isForking): ServerConfig
     {

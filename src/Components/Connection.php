@@ -6,10 +6,21 @@ use WSSC\Contracts\CommonsContract;
 use WSSC\Contracts\ConnectionContract;
 use WSSC\Contracts\WebSocketServerContract;
 
+/**
+ * Class Connection
+ * @package WSSC\Components
+ */
 class Connection implements ConnectionContract, CommonsContract
 {
+    /**
+     * @var false|resource
+     */
     private $socketConnection;
-    private $clients;
+
+    /**
+     * @var array
+     */
+    private array $clients;
 
     /**
      * Connection constructor.
@@ -169,7 +180,7 @@ class Connection implements ConnectionContract, CommonsContract
      * @return string
      * @throws \Exception
      */
-    private function getComposedFrame(array $frameHead, string $payload, int $payloadLength, bool $masked)
+    private function getComposedFrame(array $frameHead, string $payload, int $payloadLength, bool $masked): string
     {
         // convert frame-head to string:
         foreach (array_keys($frameHead) as $i) {

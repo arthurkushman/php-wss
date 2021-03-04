@@ -19,33 +19,56 @@ class WscMain implements WscCommonsContract
 {
     use WSClientTrait;
 
+    /**
+     * @var resource|bool
+     */
     private $socket;
-    private $isConnected = false;
-    private $isClosing = false;
-    private $lastOpcode;
-    private $closeStatus;
-    private $hugePayload;
-
-    private static $opcodes = [
-        CommonsContract::EVENT_TYPE_CONTINUATION => 0,
-        CommonsContract::EVENT_TYPE_TEXT         => 1,
-        CommonsContract::EVENT_TYPE_BINARY       => 2,
-        CommonsContract::EVENT_TYPE_CLOSE        => 8,
-        CommonsContract::EVENT_TYPE_PING         => 9,
-        CommonsContract::EVENT_TYPE_PONG         => 10,
-    ];
-
-    protected $socketUrl = '';
-    protected $config;
 
     /**
-     * @throws \InvalidArgumentException
+     * @var bool
+     */
+    private bool $isConnected = false;
+
+    /**
+     * @var bool
+     */
+    private bool $isClosing = false;
+
+    /**
+     * @var string
+     */
+    private string $lastOpcode;
+
+    /**
+     * @var float|int
+     */
+    private $closeStatus;
+
+    /**
+     * @var string|null
+     */
+    private ?string $hugePayload;
+
+    private static array $opcodes = [
+        CommonsContract::EVENT_TYPE_CONTINUATION => 0,
+        CommonsContract::EVENT_TYPE_TEXT => 1,
+        CommonsContract::EVENT_TYPE_BINARY => 2,
+        CommonsContract::EVENT_TYPE_CLOSE => 8,
+        CommonsContract::EVENT_TYPE_PING => 9,
+        CommonsContract::EVENT_TYPE_PONG => 10,
+    ];
+
+    protected string $socketUrl = '';
+    protected ClientConfig $config;
+
+    /**
+     * @param ClientConfig $config
      * @throws BadUriException
      * @throws ConnectionException
-     * @throws \Exception
      */
-    protected function connect()
+    protected function connect(ClientConfig $config): void
     {
+        $this->config = $config;
         $urlParts = parse_url($this->socketUrl);
 
         $this->config->setScheme($urlParts['scheme']);
@@ -261,7 +284,7 @@ class WscMain implements WscCommonsContract
      * @throws ConnectionException
      * @throws \Exception
      */
-    public function send($payload, $opcode = CommonsContract::EVENT_TYPE_TEXT)
+    public function send($payload, $opcode = CommonsContract::EVENT_TYPE_TEXT): void
     {
         if (!$this->isConnected) {
             $this->connect();
@@ -305,7 +328,7 @@ class WscMain implements WscCommonsContract
      * @throws ConnectionException
      * @throws \Exception
      */
-    public function receive()
+    public function receive(): ?string
     {
         if (!$this->isConnected) {
             $this->connect();
@@ -351,7 +374,7 @@ class WscMain implements WscCommonsContract
      * @param $data
      * @throws ConnectionException
      */
-    protected function write(string $data)
+    protected function write(string $data): void
     {
         $written = fwrite($this->socket, $data);
 
