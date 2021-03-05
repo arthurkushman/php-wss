@@ -86,7 +86,7 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
      * @throws WebSocketException
      * @throws ConnectionException
      */
-    public function run()
+    public function run(): void
     {
         $context = stream_context_create();
         $errno = null;
@@ -128,7 +128,7 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
      * @throws WebSocketException
      * @throws ConnectionException
      */
-    private function eventLoop($server, bool $fork = false)
+    private function eventLoop($server, bool $fork = false): void
     {
         if ($fork === true && $this->isPcntlLoaded()) {
             $pid = pcntl_fork();
@@ -311,7 +311,7 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
      *
      * @param string $secWebSocketAccept base64 encoded Sec-WebSocket-Accept header
      */
-    private function setHeadersUpgrade($secWebSocketAccept)
+    private function setHeadersUpgrade(string $secWebSocketAccept): void
     {
         $this->headersUpgrade = [
             self::HEADERS_UPGRADE_KEY => self::HEADERS_UPGRADE_VALUE,
