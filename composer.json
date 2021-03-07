@@ -1,6 +1,6 @@
 {
     "name": "arthurkushman/php-wss",
-    "description": "Web-socket server with URI parse and multi-process support",
+    "description": "Web-socket server/client with URI parse and multi-process support",
     "keywords": [
         "web-sockets",
         "web socket server",
@@ -13,7 +13,7 @@
     "license": "MIT",
     "homepage": "https://github.com/arthurkushman/php-wss",
     "require": {
-        "php": ">=7.1",
+        "php": ">=7.4",
         "ext-pcntl": "*"
     },
     "autoload": {

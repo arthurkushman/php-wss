@@ -20,8 +20,6 @@ class WebSocketClient extends WscMain
     public function __construct(string $url, ClientConfig $config)
     {
         $this->socketUrl = $url;
-        $this->config = $config;
-
-        $this->connect();
+        $this->connect($config);
     }
 }

@@ -10,24 +10,75 @@ use WSSC\Contracts\WscCommonsContract;
  */
 class ClientConfig
 {
-    private $scheme;
-    private $host;
-    private $user;
-    private $password;
-    private $port;
+    /**
+     * @var string
+     */
+    private string $scheme;
 
-    private $timeout = WscCommonsContract::DEFAULT_TIMEOUT;
-    private $headers = [];
-    private $fragmentSize = WscCommonsContract::DEFAULT_FRAGMENT_SIZE;
+    /**
+     * @var string
+     */
+    private string $host;
+
+    /**
+     * @var string
+     */
+    private string $user;
+
+    /**
+     * @var string
+     */
+    private string $password;
+
+    /**
+     * @var string
+     */
+    private string $port;
+
+    /**
+     * @var int
+     */
+    private int $timeout = WscCommonsContract::DEFAULT_TIMEOUT;
+
+    /**
+     * @var array
+     */
+    private array $headers = [];
+
+    /**
+     * @var int
+     */
+    private int $fragmentSize = WscCommonsContract::DEFAULT_FRAGMENT_SIZE;
+
+    /**
+     * @var null|resource
+     */
     private $context;
 
-    // proxy settings
-    private $hasProxy = false;
-    private $proxyIp;
-    private $proxyPort;
-    private $proxyAuth;
+    /**
+     * @var bool
+     */
+    private bool $hasProxy = false;
 
-    private $contextOptions = [];
+    /**
+     * @var string
+     */
+    private string $proxyIp;
+
+    /**
+     * @var string
+     */
+    private string $proxyPort;
+
+    /**
+     * @var string|null
+     */
+    private ?string $proxyAuth;
+
+    /**
+     * @var array
+     */
+    private array $contextOptions = [];
 
     /**
      * @return int
@@ -110,10 +161,10 @@ class ClientConfig
     }
 
     /**
-     * @param void $scheme
+     * @param string $scheme
      * @return ClientConfig
      */
-    public function setScheme($scheme): ClientConfig
+    public function setScheme(string $scheme): ClientConfig
     {
         $this->scheme = $scheme;
         return $this;
@@ -128,10 +179,10 @@ class ClientConfig
     }
 
     /**
-     * @param void $host
+     * @param string $host
      * @return ClientConfig
      */
-    public function setHost($host): ClientConfig
+    public function setHost(string $host): ClientConfig
     {
         $this->host = $host;
         return $this;
@@ -165,6 +216,7 @@ class ClientConfig
 
     /**
      * @param array $urlParts
+     * @return ClientConfig
      */
     public function setPassword(array $urlParts): ClientConfig
     {
@@ -182,6 +234,7 @@ class ClientConfig
 
     /**
      * @param array $urlParts
+     * @return ClientConfig
      */
     public function setPort(array $urlParts): ClientConfig
     {
@@ -199,7 +252,7 @@ class ClientConfig
 
     /**
      * @param array $contextOptions
-     * @return ServerConfig
+     * @return ClientConfig
      */
     public function setContextOptions(array $contextOptions): ClientConfig
     {
@@ -210,6 +263,7 @@ class ClientConfig
     /**
      * @param string $ip
      * @param string $port
+     * @return ClientConfig
      */
     public function setProxy(string $ip, string $port): ClientConfig
     {

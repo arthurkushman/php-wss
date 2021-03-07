@@ -2,18 +2,27 @@
 
 namespace WSSC\Components;
 
-use PHPUnit\Framework\OutputError;
-use WSSC\Exceptions\ConnectionException;
-
+/**
+ * Class OriginComponent
+ * @package WSSC\Components
+ */
 class OriginComponent
 {
+    /**
+     * @var false|resource
+     */
     private $client;
-    private $config;
+
+
+    /**
+     * @var ServerConfig
+     */
+    private ServerConfig $config;
 
     /**
      * OriginComponent constructor.
      * @param ServerConfig $config
-     * @param $client
+     * @param false|resource $client
      */
     public function __construct(ServerConfig $config, $client)
     {
@@ -25,6 +34,7 @@ class OriginComponent
      * Checks if there is a compatible origin header came from client
      * @param string $headers
      * @return bool
+     * @throws \Exception
      */
     public function checkOrigin(string $headers): bool
     {
@@ -32,14 +42,15 @@ class OriginComponent
         if (empty($matches[1])) {
             $this->sendAndClose('No Origin header found.');
             return false;
-        } else {
-            $originHost = $matches[1];
-            $allowedOrigins = $this->config->getOrigins();
-            if (in_array($originHost, $allowedOrigins, true) === false) {
-                $this->sendAndClose('Host ' . $originHost . ' is not allowed to pass access control as origin.');
-                return false;
-            }
         }
+
+        $originHost = $matches[1];
+        $allowedOrigins = $this->config->getOrigins();
+        if (in_array($originHost, $allowedOrigins, true) === false) {
+            $this->sendAndClose('Host ' . $originHost . ' is not allowed to pass access control as origin.');
+            return false;
+        }
+
         return true;
     }
 
@@ -47,7 +58,7 @@ class OriginComponent
      * @param string $msg
      * @throws \Exception
      */
-    private function sendAndClose(string $msg)
+    private function sendAndClose(string $msg): void
     {
         $conn = new Connection($this->client);
         $conn->send($msg);
