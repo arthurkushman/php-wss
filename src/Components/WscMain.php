@@ -49,6 +49,9 @@ class WscMain implements WscCommonsContract
      */
     private ?string $hugePayload;
 
+    /**
+     * @var array|int[]
+     */
     private static array $opcodes = [
         CommonsContract::EVENT_TYPE_CONTINUATION => 0,
         CommonsContract::EVENT_TYPE_TEXT => 1,
@@ -58,7 +61,14 @@ class WscMain implements WscCommonsContract
         CommonsContract::EVENT_TYPE_PONG => 10,
     ];
 
+    /**
+     * @var string
+     */
     protected string $socketUrl = '';
+
+    /**
+     * @var ClientConfig
+     */
     protected ClientConfig $config;
 
     /**

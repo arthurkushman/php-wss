@@ -17,10 +17,20 @@ class ServerHandler extends WebSocket
      *  Otherwise leave $pathParams as an empty array
      */
 
-    public $pathParams = [':entity', ':context', ':token'];
-    private $clients = [];
+    /**
+     * @var array|string[]
+     */
+    public array $pathParams = [':entity', ':context', ':token'];
 
-    private $log;
+    /**
+     * @var array
+     */
+    private array $clients = [];
+
+    /**
+     * @var Logger
+     */
+    private Logger $log;
 
     /**
      * ServerHandler constructor.

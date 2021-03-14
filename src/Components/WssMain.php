@@ -16,6 +16,9 @@ use WSSC\Contracts\WebSocketServerContract;
  */
 class WssMain implements CommonsContract
 {
+    /**
+     * @var bool
+     */
     private bool $isPcntlLoaded = false;
 
     /**
@@ -76,18 +79,13 @@ class WssMain implements CommonsContract
             return false;
         }
 
-        if ($isMasked) {
-            for ($i = $payloadOffset; $i < $dataLength; $i++) {
-                $j = $i - $payloadOffset;
-                if (isset($data[$i])) {
-                    $unmaskedPayload .= $data[$i] ^ $mask[$j % 4];
-                }
+        for ($i = $payloadOffset; $i < $dataLength; $i++) {
+            $j = $i - $payloadOffset;
+            if (isset($data[$i])) {
+                $unmaskedPayload .= $data[$i] ^ $mask[$j % 4];
             }
-            $decodedData['payload'] = $unmaskedPayload;
-        } else {
-            $payloadOffset -= 4;
-            $decodedData['payload'] = substr($data, $payloadOffset);
         }
+        $decodedData['payload'] = $unmaskedPayload;
 
         return $decodedData;
     }

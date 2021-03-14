@@ -16,7 +16,7 @@ class WebSocketClientTest extends TestCase
 
     private $url;
 
-    public function setUp()/* The :void return type declaration that should be here would cause a BC issue */
+    public function setUp(): void
     {
         $this->url = self::WS_SCHEME . self::WS_HOST . self::WS_PORT . self::WS_URI;
     }

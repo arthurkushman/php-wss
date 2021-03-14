@@ -11,7 +11,10 @@ use WSSC\Exceptions\WebSocketException;
  */
 abstract class WebSocket implements WebSocketContract, MessageContract
 {
-    public $pathParams = [];
+    /**
+     * @var array
+     */
+    public array $pathParams = [];
 
     /**
      * You may want to implement these methods to bring ping/pong events

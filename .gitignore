@@ -2,3 +2,4 @@
 vendor/
 tests/tests.log
 composer.lock
+.phpunit.result.cache
