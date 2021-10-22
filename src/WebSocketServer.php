@@ -199,7 +199,7 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
      */
     private function acceptNewClient($server, array &$readSocks): void
     {
-        $newClient = stream_socket_accept($server, 0); // must be 0 to non-block
+        $newClient = stream_socket_accept($server, -1); // must be 0 to non-block
         if ($newClient) {
             if ($this->config->isSsl() === true) {
                 $isEnabled = stream_socket_enable_crypto($newClient, true, $this->config->getCryptoType());
