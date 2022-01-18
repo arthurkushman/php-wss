@@ -32,17 +32,6 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
     private array $clients = [];
 
     /**
-     * set any template You need ex.: GET /subscription/messenger/token
-     * @var array
-     */
-    private array $pathParams = [];
-
-    /**
-     * @var array
-     */
-    private array $handshakes = [];
-
-    /**
      * @var array
      */
     private array $headersUpgrade = [];
@@ -304,8 +293,6 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
         }
 
         $key = $match[1];
-        $this->handshakes[(int)$client] = $key;
-
         // sending header according to WebSocket Protocol
         $secWebSocketAccept = base64_encode(sha1(trim($key) . self::HEADER_WEBSOCKET_ACCEPT_HASH, true));
         $this->setHeadersUpgrade($secWebSocketAccept);

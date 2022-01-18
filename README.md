@@ -248,3 +248,7 @@ For instance, if set 100 CPP and there are 128 connections - You will be able to
 Used by:
 
 ![alt Avito logo](https://github.com/SoliDry/laravel-api/blob/master/tests/images/avito_logo.png)
+
+Supporters gratitude:
+
+<img src="https://github.com/SoliDry/laravel-api/blob/master/tests/images/jetbrains-logo.png" alt="JetBrains logo" width="200" height="166" />
