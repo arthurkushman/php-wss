@@ -29,7 +29,8 @@
         }
     },
     "require-dev": {
-        "phpunit/phpunit": "^7",
-        "monolog/monolog": "^1.24"
+        "phpunit/phpunit": "^9",
+        "monolog/monolog": "^1.24",
+        "phpstan/phpstan": "^1.4"
     }
 }

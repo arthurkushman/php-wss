@@ -297,7 +297,7 @@ class WscMain implements WscCommonsContract
     public function send($payload, $opcode = CommonsContract::EVENT_TYPE_TEXT): void
     {
         if (!$this->isConnected) {
-            $this->connect();
+            $this->connect(new ClientConfig());
         }
         if (array_key_exists($opcode, self::$opcodes) === false) {
             throw new BadOpcodeException(
@@ -341,7 +341,7 @@ class WscMain implements WscCommonsContract
     public function receive(): ?string
     {
         if (!$this->isConnected) {
-            $this->connect();
+            $this->connect(new ClientConfig());
         }
         $this->hugePayload = '';
 
