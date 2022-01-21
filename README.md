@@ -242,6 +242,20 @@ phpunit --bootstrap ./tests/_bootstrap.php ./tests/WebSocketClientTest.php
 
 PHP7 support since version 1.3 - with types, returns and better function implementations.
 
+Benchmarks:
+
+| iter | benchmark           | subject      | set | revs  | mem_peak   | time_avg | comp_z_value | comp_deviation |
+| --- | --- |
+| 0    | MaxConnectionsBench | benchConnect |     | 10000 | 1,547,496b | 4.831μs  | +1.41σ       | +6.35%         |
+| 1    | MaxConnectionsBench | benchConnect |     | 10000 | 1,547,496b | 4.372μs  | -0.83σ       | -3.76%         |
+| 2    | MaxConnectionsBench | benchConnect |     | 10000 | 1,547,496b | 4.425μs  | -0.57σ       | -2.59%         |
+
+
+| benchmark           | subject      | revs  | its | mem_peak | mode    | rstdev |
+| MaxConnectionsBench | benchConnect | 10000 | 3   | 1.547mb  | 4.427μs | ±4.51% |
+
+As you may have been noticed, average time to send msg is `4.427μs` which is roughly `4` microseconds.
+
 PS U'll see the processes increase named "php-wss" as CPP (Connections Per-Process) will grow and decrease while stack will lessen.
 For instance, if set 100 CPP and there are 128 connections - You will be able to see 2 "php-wss" processes with for ex.: `ps aux | grep php-wss`
 
