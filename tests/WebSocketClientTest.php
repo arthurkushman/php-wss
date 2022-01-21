@@ -14,7 +14,7 @@ class WebSocketClientTest extends TestCase
     private const WS_PORT = ':8000';
     private const WS_URI = '/notifications/messanger/vkjsndfvjn23243';
 
-    private $url;
+    private string $url = self::WS_SCHEME . self::WS_HOST . self::WS_PORT . self::WS_URI;
 
     public function setUp(): void
     {
