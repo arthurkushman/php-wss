@@ -12,9 +12,9 @@ class ServerConfig
     private int $clientsPerFork = WebSocketServerContract::CLIENTS_PER_FORK;
 
     /**
-     * @var int
+     * @var int|null
      */
-    private int $streamSelectTimeout = WebSocketServerContract::STREAM_SELECT_TIMEOUT;
+    private ?int $streamSelectTimeout = WebSocketServerContract::STREAM_SELECT_TIMEOUT;
 
     /**
      * @var string
@@ -78,7 +78,7 @@ class ServerConfig
     private int $cryptoType;
 
     /**
-     * @return mixed
+     * @return int
      */
     public function getClientsPerFork(): int
     {
@@ -86,7 +86,7 @@ class ServerConfig
     }
 
     /**
-     * @param mixed $clientsPerFork
+     * @param int $clientsPerFork
      * @return ServerConfig
      */
     public function setClientsPerFork(int $clientsPerFork): ServerConfig
@@ -96,18 +96,18 @@ class ServerConfig
     }
 
     /**
-     * @return mixed
+     * @return null|int
      */
-    public function getStreamSelectTimeout(): int
+    public function getStreamSelectTimeout(): ?int
     {
         return $this->streamSelectTimeout;
     }
 
     /**
-     * @param mixed $streamSelectTimeout
+     * @param null|int $streamSelectTimeout
      * @return ServerConfig
      */
-    public function setStreamSelectTimeout(int $streamSelectTimeout): ServerConfig
+    public function setStreamSelectTimeout(?int $streamSelectTimeout): ServerConfig
     {
         $this->streamSelectTimeout = $streamSelectTimeout;
         return $this;
