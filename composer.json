@@ -13,8 +13,7 @@
     "license": "MIT",
     "homepage": "https://github.com/arthurkushman/php-wss",
     "require": {
-        "php": ">=7.4",
-        "ext-pcntl": "*"
+        "php": ">=7.4"
     },
     "autoload": {
         "psr-4": {
@@ -33,5 +32,8 @@
         "monolog/monolog": "^1.24",
         "phpstan/phpstan": "^1.4",
         "phpbench/phpbench": "^1.2"
+    },
+    "suggest": {
+        "ext-pcntl": "Allows for forking the server process to handle more clients at once"
     }
 }
