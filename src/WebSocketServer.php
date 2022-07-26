@@ -231,15 +231,14 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
      */
     private function messagesWorker(array $readSocks): void
     {
-        $largePayloadData = '';
         foreach ($readSocks as $kSock => $sock) {
             $data = $this->decode(fread($sock, self::MAX_BYTES_READ));
             if ($data !== null) {
-                $dataType = $data['type'];
-                $dataPayload = $data['payload'];
-
-                if ($data === false) { // payload is too large - waiting for remained data
-                    $largePayloadData += $dataPayload;
+                $dataType = null;
+                $dataPayload = null;
+                if ($data !== false) { // payload is too large - waiting for remained data
+                    $dataType = $data['type'];
+                    $dataPayload = $data['payload'];
                 }
 
                 // to manipulate connection through send/close methods via handler, specified in IConnection
@@ -261,11 +260,6 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
                     && method_exists($this->handler, self::MAP_EVENT_TYPE_TO_METHODS[$dataType]);
                 if ($isSupportedMethod) {
                     try {
-                        if (empty($largePayloadData) === false) {
-                            $dataPayload = $largePayloadData + $dataPayload;
-                            $largePayloadData = ''; // clear saved large payload for the next one
-                        }
-
                         // dynamic call: onMessage, onPing, onPong
                         $this->handler->{self::MAP_EVENT_TYPE_TO_METHODS[$dataType]}($cureentConn, $dataPayload);
                     } catch (WebSocketException $e) {
@@ -289,7 +283,7 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
         $match = [];
         preg_match(self::SEC_WEBSOCKET_KEY_PTRN, $headers, $match);
         if (empty($match[1])) {
-            return false;
+            return '';
         }
 
         $key = $match[1];
