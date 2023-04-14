@@ -139,6 +139,8 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
     private function looping($server): void
     {
         while (true) {
+            usleep(1000);
+
             $totalClients = count($this->clients) + 1;
 
             // maxClients prevents process fork on count down
