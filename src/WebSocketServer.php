@@ -52,6 +52,11 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
     private bool $stepRecursion = true;
 
     /**
+     * @var int
+     */
+    private int $loopingDelay = 1000;
+
+    /**
      * WebSocketServer constructor.
      *
      * @param WebSocket $handler
@@ -67,6 +72,18 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
         $this->handler = $handler;
         $this->config = $config;
         $this->setIsPcntlLoaded(extension_loaded('pcntl'));
+    }
+
+    /**
+     * Set the looping sleep in microseconds
+     *
+     * @return self
+     */
+    public function loopingDelay(int $loopingDelay): self
+    {
+        $this->loopingDelay = $loopingDelay;
+
+        return $this;
     }
 
     /**
@@ -122,7 +139,7 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
         if ($fork === true && $this->isPcntlLoaded()) {
             $pid = pcntl_fork();
 
-            if ($pid) { // run eventLoop in parent        
+            if ($pid) { // run eventLoop in parent
                 @cli_set_process_title($this->config->getProcessName());
                 $this->eventLoop($server);
             }
@@ -139,6 +156,8 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
     private function looping($server): void
     {
         while (true) {
+            usleep($this->loopingDelay);
+
             $totalClients = count($this->clients) + 1;
 
             // maxClients prevents process fork on count down
