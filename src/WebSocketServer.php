@@ -52,6 +52,11 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
     private bool $stepRecursion = true;
 
     /**
+     * @var bool
+     */
+    private bool $printException = true;
+
+    /**
      * WebSocketServer constructor.
      *
      * @param WebSocket $handler
@@ -67,6 +72,18 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
         $this->handler = $handler;
         $this->config = $config;
         $this->setIsPcntlLoaded(extension_loaded('pcntl'));
+    }
+
+    /**
+     * Configure if error exceptions should be printed
+     *
+     * @return self
+     */
+    public function printException(bool $printException): self
+    {
+        $this->printException = $printException;
+
+        return $this;
     }
 
     /**
@@ -248,7 +265,7 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
                     try {
                         $this->handler->onClose($cureentConn);
                     } catch (WebSocketException $e) {
-                        $e->printStack();
+                        $this->handleMessagesWorkerException($cureentConn, $e);
                     }
 
                     // to avoid event leaks
@@ -263,7 +280,7 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
                         // dynamic call: onMessage, onPing, onPong
                         $this->handler->{self::MAP_EVENT_TYPE_TO_METHODS[$dataType]}($cureentConn, $dataPayload);
                     } catch (WebSocketException $e) {
-                        $e->printStack();
+                        $this->handleMessagesWorkerException($cureentConn, $e);
                     }
                 }
             }
@@ -362,6 +379,21 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
                 unset($this->handler->pathParams[array_search($param, $this->handler->pathParams, false)]);
                 $left = substr($left, strpos($left, '/', 1));
             }
+        }
+    }
+
+    /**
+     * Manage messagesWorker Exceptions
+     *
+     * @param Connection $connection
+     * @param WebSocketException $e
+     */
+    private function handleMessagesWorkerException(Connection $connection, WebSocketException $e): void
+    {
+        $this->handler->onError($connection, $e);
+
+        if ($this->printException) {
+            $e->printStack();
         }
     }
 }
