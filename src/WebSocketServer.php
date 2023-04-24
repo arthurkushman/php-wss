@@ -51,11 +51,7 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
      */
     private bool $stepRecursion = true;
 
-    /**
-     * @var int
-     */
-    private int $loopingDelay = 1000;
-
+    /*
      * @var bool
      */
     private bool $printException = true;
@@ -76,18 +72,6 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
         $this->handler = $handler;
         $this->config = $config;
         $this->setIsPcntlLoaded(extension_loaded('pcntl'));
-    }
-
-    /**
-     * Set the looping sleep in microseconds
-     *
-     * @return self
-     */
-    public function loopingDelay(int $loopingDelay): self
-    {
-        $this->loopingDelay = $loopingDelay;
-
-        return $this;
     }
 
     /**
@@ -171,8 +155,13 @@ class WebSocketServer extends WssMain implements WebSocketServerContract
      */
     private function looping($server): void
     {
+        $loopingDelay = $this->config->getLoopingDelay();
+
         while (true) {
-            usleep($this->loopingDelay);
+            // usleep require microseconds
+            if ($loopingDelay) {
+                usleep($loopingDelay * 1000);
+            }
 
             $totalClients = count($this->clients) + 1;
 

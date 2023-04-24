@@ -228,6 +228,21 @@ $websocketServer = new WebSocketServer(new ServerHandler(), $config);
 $websocketServer->run();
 ```
 
+### Avoid high CPU usage
+```php
+use WSSC\WebSocketServer;
+use WSSCTEST\ServerHandler;
+use WSSC\Components\ServerConfig;
+
+$config = new ServerConfig();
+
+// Set the read socket iteration delay in miliseconds
+$config->setLoopingDelay(1);
+
+$webSocketServer = new WebSocketServer(new ServerHandler(), $config);
+$webSocketServer->run();
+```
+
 ### How to test
 
 To run the Server - execute from the root of a project:
