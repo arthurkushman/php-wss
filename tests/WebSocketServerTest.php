@@ -20,6 +20,7 @@ class WebSocketServerTest extends TestCase
         $config = new ServerConfig();
         $config->setClientsPerFork(2500);
         $config->setStreamSelectTimeout(2 * 3600);
+        $config->setLoopingDelay(1);
 
         $websocketServer = new WebSocketServer(new ServerHandler(), $config);
         $websocketServer->run();

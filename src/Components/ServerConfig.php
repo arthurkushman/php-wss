@@ -2,6 +2,7 @@
 
 namespace WSSC\Components;
 
+use Exception;
 use WSSC\Contracts\WebSocketServerContract;
 
 class ServerConfig
@@ -46,7 +47,6 @@ class ServerConfig
      */
     private array $origins = [];
 
-
     /**
      * @var bool
      */
@@ -76,6 +76,16 @@ class ServerConfig
      * @var int
      */
     private int $cryptoType;
+
+    /**
+     * @var int
+     */
+    private int $loopingDelay = 0;
+
+    /**
+     * @var array
+     */
+    private array $loopingDelayRange = [0, 1000];
 
     /**
      * @return int
@@ -329,5 +339,29 @@ class ServerConfig
     public function getCryptoType(): int
     {
         return $this->cryptoType;
+    }
+
+    /**
+     * Set the looping sleep in milliseconds
+     *
+     * @return self
+     */
+    public function setLoopingDelay(int $loopingDelay): self
+    {
+        if (($loopingDelay < $this->loopingDelayRange[0]) || ($loopingDelay > $this->loopingDelayRange[1])) {
+            throw new Exception('loopingDelay value must be between 1 and 1000 milliseconds.');
+        }
+
+        $this->loopingDelay = $loopingDelay;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLoopingDelay(): int
+    {
+        return $this->loopingDelay;
     }
 }
