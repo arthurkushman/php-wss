@@ -121,7 +121,7 @@ class WscMain implements WscCommonsContract
             'Host'                  => $this->config->getHost() . ':' . $this->config->getPort(),
             'User-Agent'            => 'websocket-client-php',
             'Connection'            => 'Upgrade',
-            'Upgrade'               => 'WebSocket',
+            'Upgrade'               => 'websocket',
             'Sec-WebSocket-Key'     => $key,
             'Sec-Websocket-Version' => '13',
         ];
