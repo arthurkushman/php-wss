@@ -53,7 +53,7 @@ class ClientConfig
     /**
      * @var null|resource
      */
-    private $context;
+    private mixed $context = null;
 
     /**
      * @var bool
@@ -137,7 +137,7 @@ class ClientConfig
     /**
      * @return mixed
      */
-    public function getContext()
+    public function getContext(): mixed
     {
         return $this->context;
     }
@@ -146,7 +146,7 @@ class ClientConfig
      * @param mixed $context
      * @return ClientConfig
      */
-    public function setContext($context): ClientConfig
+    public function setContext(mixed $context): ClientConfig
     {
         $this->context = $context;
         return $this;
