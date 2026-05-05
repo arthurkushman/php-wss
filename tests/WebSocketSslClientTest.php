@@ -18,7 +18,7 @@ class WebSocketSslClientTest extends TestCase
 
     private $url;
 
-    public function setUp()/* The :void return type declaration that should be here would cause a BC issue */
+    protected function setUp(): void /* The :void return type declaration that should be here would cause a BC issue */
     {
         $this->url = self::WS_SCHEME . self::WS_HOST . self::WS_PORT . self::WS_URI;
     }

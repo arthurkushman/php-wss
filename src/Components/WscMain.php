@@ -42,7 +42,7 @@ class WscMain implements WscCommonsContract
     /**
      * @var float|int
      */
-    private $closeStatus;
+    private int $closeStatus = 0;
 
     /**
      * @var string|null
