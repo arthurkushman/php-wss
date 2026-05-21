@@ -154,7 +154,7 @@ $webSocketServer->run();
 ```php
 <?php
 use WSSC\WebSocketClient;
-use \WSSC\Components\ClientConfig;
+use WSSC\Components\ClientConfig;
 
 $client = new WebSocketClient('ws://localhost:8000/notifications/messanger/yourtoken123', new ClientConfig());
 $client->send('{"user_id" : 123}');
